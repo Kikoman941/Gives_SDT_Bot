@@ -17,3 +17,11 @@ func (m *Menus) init(buttons *Buttons) {
 		m.StartMenu.Row(buttons.CreateGiveButton, buttons.MyGivesButton),
 	)
 }
+
+func (m *Menus) CreateReplyMenu(buttons []telebot.Btn) *telebot.ReplyMarkup {
+
+}
+
+func (m *Menus) CreateInlineMenu(buttons []telebot.Btn) *telebot.ReplyMarkup {
+
+}

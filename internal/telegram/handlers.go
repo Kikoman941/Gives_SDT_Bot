@@ -51,10 +51,27 @@ func (b *Bot) InitHandlers() {
 		middleware.Whitelist(b.adminGroup...),
 	)
 
+	// Кнопка "Назад в главное меню", отмена любого состояния до старта
+	b.bot.Handle(
+		&b.telegramData.Buttons.MainMenuButton,
+		func(ctx telebot.Context) error {
+			if err := b.fsm.setState(ctx.Chat().ID, MAIN_MENU); err != nil {
+				return err
+			}
+
+			return ctx.Reply(b.telegramData.Messages["startMessage"], b.telegramData.Menus.StartMenu)
+		},
+		middleware.Whitelist(b.adminGroup...),
+	)
+
 	b.bot.Handle(
 		&b.telegramData.Buttons.CreateGiveButton,
 		func(ctx telebot.Context) error {
-			return ctx.Reply(b.telegramData.Messages["addTargetChanel"])
+			if err := b.fsm.setState(ctx.Chat().ID, ADD_TARGET_CHANNELS); err != nil {
+				return err
+			}
+
+			return ctx.Reply(b.telegramData.Messages["addTargetChannels"])
 		},
 		middleware.Whitelist(b.adminGroup...),
 	)

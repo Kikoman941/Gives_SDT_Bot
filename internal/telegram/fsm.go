@@ -14,7 +14,7 @@ func NewFSM(storage storage.BotStorage) *FSM {
 	}
 }
 
-func (fsm *FSM) setState(userID int, state string) error {
+func (fsm *FSM) setState(userID int64, state string) error {
 	userState := &UserState{
 		UserID: userID,
 		State:  state,

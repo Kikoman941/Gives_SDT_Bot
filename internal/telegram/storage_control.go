@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-func (b *Bot) addUser(telegramID int64, isAdmin bool) (int, error) {
+func (b *Bot) addUser(telegramID int64, isAdmin bool) (int64, error) {
 	user := &User{
 		TgID: strconv.FormatInt(telegramID, 10),
 	}
