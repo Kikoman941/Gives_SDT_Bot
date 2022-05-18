@@ -10,8 +10,8 @@ type Buttons struct {
 
 func newButtons(menus *Menus) *Buttons {
 	return &Buttons{
-		CreateGiveButton: telebot.Btn{Text: "Новый конкурс"},
-		MyGivesButton:    telebot.Btn{Text: "Мои конкурсы"},
-		MainMenuButton:   telebot.Btn{Text: "Назад в главное меню"},
+		CreateGiveButton: telebot.Btn{Text: "Новый конкурс 🎁"},
+		MyGivesButton:    telebot.Btn{Text: "Мои конкурсы 📋"},
+		MainMenuButton:   telebot.Btn{Text: "Назад в главное меню 🔙"},
 	}
 }

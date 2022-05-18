@@ -5,11 +5,11 @@ import (
 	"github.com/go-pg/pg/v10"
 )
 
-type PostgresDB struct {
+type PostgreDB struct {
 	db *pg.DB
 }
 
-func NewPostgresDB(dsn string) (*PostgresDB, error) {
+func NewPostgresDB(dsn string) (*PostgreDB, error) {
 	opt, err := pg.ParseURL(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse storage dsn: %s", err)
@@ -17,17 +17,13 @@ func NewPostgresDB(dsn string) (*PostgresDB, error) {
 
 	db := pg.Connect(opt)
 
-	return &PostgresDB{
+	return &PostgreDB{
 		db: db,
 	}, nil
 }
 
-func (pg *PostgresDB) Select(model interface{}, tableName string, condition string) error {
+func (pg *PostgreDB) Select(model interface{}, condition string) error {
 	query := pg.db.Model(model)
-
-	if tableName != "" {
-		query.Table(tableName)
-	}
 
 	if condition != "" {
 		query.Where(condition)
@@ -40,8 +36,8 @@ func (pg *PostgresDB) Select(model interface{}, tableName string, condition stri
 	return nil
 }
 
-func (pg *PostgresDB) Insert(model interface{}) (interface{}, error) {
-	_, err := pg.db.Model(model).SelectOrInsert()
+func (pg *PostgreDB) Insert(model interface{}) (interface{}, error) {
+	_, err := pg.db.Model(model).OnConflict("DO NOTHING").Insert()
 	if err != nil {
 		return nil, err
 	}
