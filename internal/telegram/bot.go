@@ -2,21 +2,16 @@ package telegram
 
 import (
 	"Gives_SDT_Bot/internal/config"
-	"Gives_SDT_Bot/internal/storage"
-	"Gives_SDT_Bot/internal/telegram/data"
 	"errors"
 	"gopkg.in/telebot.v3"
 )
 
 type Bot struct {
-	bot          *telebot.Bot
-	fsm          *FSM
-	telegramData *data.TelegramData
-	adminGroup   []int64
-	storage      storage.BotStorage
+	bot        *telebot.Bot
+	adminGroup []int64
 }
 
-func NewBot(cfg *config.Config, storage storage.BotStorage) (*Bot, error) {
+func NewBot(cfg *config.Config) (*Bot, error) {
 	b, err := telebot.NewBot(
 		telebot.Settings{
 			Token: cfg.BotToken,
@@ -29,18 +24,12 @@ func NewBot(cfg *config.Config, storage storage.BotStorage) (*Bot, error) {
 		return nil, errors.New("cannot create bot")
 	}
 
-	fsm := NewFSM(storage)
-	td := data.NewTelegramData()
-
 	var adminGroup []int64
-	adminGroup = append(adminGroup, cfg.Superadmin)
+	adminGroup = append(adminGroup, cfg.SuperAdmin)
 
 	return &Bot{
-		bot:          b,
-		fsm:          fsm,
-		telegramData: td,
-		adminGroup:   adminGroup,
-		storage:      storage,
+		bot:        b,
+		adminGroup: adminGroup,
 	}, nil
 }
 

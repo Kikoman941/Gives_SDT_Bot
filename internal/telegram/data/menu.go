@@ -13,15 +13,18 @@ func newMenus() *Menus {
 }
 
 func (m *Menus) init(buttons *Buttons) {
-	m.StartMenu.Reply(
+	m.StartMenu.Inline(
 		m.StartMenu.Row(buttons.CreateGiveButton, buttons.MyGivesButton),
 	)
 }
 
 func (m *Menus) CreateReplyMenu(buttons []telebot.Btn) *telebot.ReplyMarkup {
-
+	return &telebot.ReplyMarkup{}
 }
 
-func (m *Menus) CreateInlineMenu(buttons []telebot.Btn) *telebot.ReplyMarkup {
-
+func (m *Menus) CreateInlineMenu() *telebot.ReplyMarkup {
+	menu := &telebot.ReplyMarkup{}
+	btn := menu.Data("TEST INLINE", "haha", "test_inline")
+	menu.Inline(menu.Row(btn))
+	return menu
 }

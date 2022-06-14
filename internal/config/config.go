@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	IsProd            bool
-	Superadmin        int64
+	SuperAdmin        int64
 	BotToken          string
 	BotPollingTimeout time.Duration
 	PostgreDSN        string
@@ -33,7 +33,7 @@ func NewConfig() (*Config, error) {
 
 	return &Config{
 		IsProd:            os.Getenv("IS_PROD") == "True",
-		Superadmin:        superadmin,
+		SuperAdmin:        superadmin,
 		BotToken:          os.Getenv("BOT_TOKEN"),
 		BotPollingTimeout: duration,
 		PostgreDSN:        os.Getenv("POSTGRE_DSN"),

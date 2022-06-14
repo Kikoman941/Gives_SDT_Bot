@@ -79,12 +79,29 @@ func (b *Bot) InitHandlers() {
 	b.bot.Handle(
 		telebot.OnText,
 		func(ctx telebot.Context) error {
-			_, err := b.bot.ChatMemberOf(getChatIdFromInt(1001422240135), getChatIdFromInt(10784525812))
-			if errors.As(err, &errorUserNotFound) {
-				return ctx.Reply("Пользователь не подписан")
-			} else {
-				return err
-			}
+			//_, err := b.bot.ChatMemberOf(getChatIdFromInt(1001422240135), getChatIdFromInt(10784525812))
+			//if errors.As(err, &errorUserNotFound) {
+			//	return ctx.Reply("Пользователь не подписан")
+			//} else {
+			//	return err
+			//}
+			return ctx.Reply("DONE", b.telegramData.Menus.CreateInlineMenu())
+		},
+		middleware.Whitelist(b.adminGroup...),
+	)
+
+	b.bot.Handle(
+		&b.telegramData.Buttons.MyGivesButton,
+		func(ctx telebot.Context) error {
+			return ctx.Respond()
+		},
+		middleware.Whitelist(b.adminGroup...),
+	)
+
+	b.bot.Handle(
+		telebot.OnCallback,
+		func(ctx telebot.Context) error {
+			return ctx.Reply(ctx.Callback().Data)
 		},
 		middleware.Whitelist(b.adminGroup...),
 	)

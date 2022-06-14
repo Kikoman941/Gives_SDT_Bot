@@ -13,3 +13,17 @@ CREATE TABLE public.users_states (
 	CONSTRAINT users_states_fk FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 
+CREATE TABLE public.gives (
+	id int4 NOT NULL,
+	"owner" int4 NOT NULL,
+	is_active bool NOT NULL,
+	title text NULL,
+	description text NULL,
+	images _text NULL,
+	start_at timestamptz NULL,
+	finish_at timestamptz NULL,
+	channel int NULL,
+	target_channels _int8 NULL,
+	CONSTRAINT gives_pk PRIMARY KEY (id),
+	CONSTRAINT gives_fk FOREIGN KEY ("owner") REFERENCES public.users(id)
+);
