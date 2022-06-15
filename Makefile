@@ -9,7 +9,7 @@ run: build
 define ENV_EXAMPLE
 IS_PROD=False
 SUPERADMIN=0
-BOT_TOKEN=tocken
+BOT_TOKEN=token
 BOT_POLLING_TIMEOUT=30s
 POSTGRESQL_DSN=dsn
 endef

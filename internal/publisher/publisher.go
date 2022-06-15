@@ -21,7 +21,7 @@ func NewPublisher(bot *telebot.Bot, logger *logging.Logger) (*Publisher, error) 
 
 func (p *Publisher) Run() {
 	go func() {
-		for true {
+		for {
 			fmt.Println("test publisger")
 			time.Sleep(time.Second * 5)
 		}
