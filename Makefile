@@ -5,3 +5,18 @@ build:
 
 run: build
 	./.bin/app
+
+define ENV_EXAMPLE
+IS_PROD=False
+SUPERADMIN=0
+BOT_TOKEN=tocken
+BOT_POLLING_TIMEOUT=30s
+POSTGRESQL_DSN=dsn
+endef
+
+export ENV_EXAMPLE
+env_example:
+	@if [ ! -f ".env" ]; then \
+  		echo "$$ENV_EXAMPLE" > ".env"; \
+  	fi
+

@@ -1,4 +1,5 @@
 .bin
+.images
 .dockerignore
 .gitignore
 Makefile

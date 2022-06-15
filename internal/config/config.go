@@ -36,6 +36,6 @@ func NewConfig() (*Config, error) {
 		SuperAdmin:        superadmin,
 		BotToken:          os.Getenv("BOT_TOKEN"),
 		BotPollingTimeout: duration,
-		PostgreDSN:        os.Getenv("POSTGRE_DSN"),
+		PostgreDSN:        os.Getenv("POSTGRESQL_DSN"),
 	}, nil
 }

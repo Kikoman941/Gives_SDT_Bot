@@ -1,20 +1,22 @@
 package app
 
 import (
+	"Gives_SDT_Bot/internal/adminPanel"
 	"Gives_SDT_Bot/internal/config"
-	"Gives_SDT_Bot/internal/service/adminPanel"
-	"Gives_SDT_Bot/internal/service/publisher"
+	"Gives_SDT_Bot/internal/publisher"
+	"Gives_SDT_Bot/pkg/errors"
+	"Gives_SDT_Bot/pkg/localImages"
 	"Gives_SDT_Bot/pkg/logging"
-	"errors"
 	"gopkg.in/telebot.v3"
 )
 
 type App struct {
-	config     *config.Config
-	logger     *logging.Logger
-	bot        *telebot.Bot
-	publisher  *publisher.Publisher
-	adminPanel *adminPanel.AdminPanel
+	config      *config.Config
+	logger      *logging.Logger
+	bot         *telebot.Bot
+	publisher   *publisher.Publisher
+	adminPanel  *adminPanel.AdminPanel
+	localImages *localImages.LocalImages
 }
 
 func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
@@ -27,25 +29,31 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		},
 	)
 	if err != nil {
-		return nil, errors.New("cannot create bot")
+		return nil, errors.FormatError("cannot create telegram bot", err)
+	}
+
+	lImages, err := localImages.NewLocalImage(".images")
+	if err != nil {
+		return nil, err
 	}
 
 	pub, err := publisher.NewPublisher(bot, logger)
 	if err != nil {
-		return nil, errors.New("cannot create publisher")
+		return nil, err
 	}
 
 	ap, err := adminPanel.NewAdminPanel(bot, logger)
 	if err != nil {
-		return nil, errors.New("cannot create admin panel")
+		return nil, err
 	}
 
 	return &App{
-		config:     config,
-		logger:     logger,
-		bot:        bot,
-		publisher:  pub,
-		adminPanel: ap,
+		config:      config,
+		logger:      logger,
+		bot:         bot,
+		publisher:   pub,
+		adminPanel:  ap,
+		localImages: lImages,
 	}, nil
 }
 

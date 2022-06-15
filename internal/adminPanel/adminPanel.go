@@ -1,7 +1,7 @@
 package adminPanel
 
 import (
-	"Gives_SDT_Bot/internal/service/fsm"
+	"Gives_SDT_Bot/internal/fsm"
 	"Gives_SDT_Bot/pkg/logging"
 	"gopkg.in/telebot.v3"
 )
