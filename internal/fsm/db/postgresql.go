@@ -12,19 +12,13 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) Create(ctx context.Context, us fsm.UserState) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *repository) Update(ctx context.Context, us fsm.UserState) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func NewStorage(dbClient *pg.DB, logger *logging.Logger) fsm.Repository {
-	return &repository{
-		client: dbClient,
-		logger: logger,
+func (r *repository) UpdateOrInsert(ctx context.Context, us fsm.UserState) error {
+	query := r.client.Model(us)
+	_, err := query.OnConflict("(UserID) DO_UPDATE").
+		Set("(State) = State").
+		Insert()
+	if err != nil {
+		return err
 	}
+	return nil
 }

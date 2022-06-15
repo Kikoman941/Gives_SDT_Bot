@@ -8,7 +8,7 @@ import (
 
 type Bot struct {
 	bot        *telebot.Bot
-	adminGroup []int64
+	adminGroup []int
 }
 
 func NewBot(cfg *config.Config) (*Bot, error) {
@@ -24,7 +24,7 @@ func NewBot(cfg *config.Config) (*Bot, error) {
 		return nil, errors.New("cannot create bot")
 	}
 
-	var adminGroup []int64
+	var adminGroup []int
 	adminGroup = append(adminGroup, cfg.SuperAdmin)
 
 	return &Bot{
@@ -37,7 +37,7 @@ func (b *Bot) Start() {
 	b.bot.Start()
 }
 
-func (b *Bot) refreshAdmins(admins []int64) {
-	b.adminGroup = []int64{}
+func (b *Bot) refreshAdmins(admins []int) {
+	b.adminGroup = []int{}
 	b.adminGroup = append(b.adminGroup, admins...)
 }

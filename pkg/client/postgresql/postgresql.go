@@ -6,6 +6,9 @@ import (
 	"github.com/go-pg/pg/v10"
 )
 
+type Client interface {
+}
+
 func NewClient(ctx context.Context, dsn string) (*pg.DB, error) {
 	opt, err := pg.ParseURL(dsn)
 	if err != nil {

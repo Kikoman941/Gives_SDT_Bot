@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	IsProd            bool
-	SuperAdmin        int64
+	SuperAdmin        int
 	BotToken          string
 	BotPollingTimeout time.Duration
 	PostgreDSN        string
@@ -21,7 +21,7 @@ func NewConfig() (*Config, error) {
 		return nil, errors.New("cannot load env")
 	}
 
-	superadmin, err := strconv.ParseInt(os.Getenv("SUPERADMIN"), 10, 64)
+	superadmin, err := strconv.Atoi(os.Getenv("SUPERADMIN"))
 	if err != nil {
 		return nil, errors.New("cannot parse superadmin id")
 	}

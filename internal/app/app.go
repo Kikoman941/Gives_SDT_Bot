@@ -3,10 +3,14 @@ package app
 import (
 	"Gives_SDT_Bot/internal/adminPanel"
 	"Gives_SDT_Bot/internal/config"
+	"Gives_SDT_Bot/internal/fsm"
 	"Gives_SDT_Bot/internal/publisher"
+	"Gives_SDT_Bot/internal/user"
+	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/errors"
 	"Gives_SDT_Bot/pkg/localImages"
 	"Gives_SDT_Bot/pkg/logging"
+	"context"
 	"gopkg.in/telebot.v3"
 )
 
@@ -20,6 +24,14 @@ type App struct {
 }
 
 func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
+	ctx := context.TODO()
+
+	logger.Info("Initialization postgresql client")
+	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgreDSN)
+	if err != nil {
+		return nil, errors.FormatError("cannot get postgresql client", err)
+	}
+
 	logger.Info("Creating telegram bot")
 	bot, err := telebot.NewBot(
 		telebot.Settings{
@@ -45,8 +57,13 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		return nil, err
 	}
 
+	userService, err := user.NewUserService(postgresqlClient)
+
+	logger.Info("Initialization FSM")
+	f, err := fsm.NewFSM(postgresqlClient, logger)
+
 	logger.Info("Initialization admin panel")
-	ap, err := adminPanel.NewAdminPanel(bot, logger)
+	ap, err := adminPanel.NewAdminPanel(bot, config.SuperAdmin, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +79,7 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 }
 
 func (a *App) Run() {
-	a.publisher.Run()
 	a.bot.Start()
+	a.publisher.Run()
 	a.logger.Info("App successfully started")
 }
