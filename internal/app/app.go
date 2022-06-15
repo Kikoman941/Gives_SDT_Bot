@@ -20,6 +20,7 @@ type App struct {
 }
 
 func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
+	logger.Info("Creating telegram bot")
 	bot, err := telebot.NewBot(
 		telebot.Settings{
 			Token: config.BotToken,
@@ -32,16 +33,19 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		return nil, errors.FormatError("cannot create telegram bot", err)
 	}
 
-	lImages, err := localImages.NewLocalImage(".images")
+	logger.Info("Initialization local image service")
+	lImages, err := localImages.NewLocalImage(".images", logger)
 	if err != nil {
 		return nil, err
 	}
 
+	logger.Info("Initialization publisher")
 	pub, err := publisher.NewPublisher(bot, logger)
 	if err != nil {
 		return nil, err
 	}
 
+	logger.Info("Initialization admin panel")
 	ap, err := adminPanel.NewAdminPanel(bot, logger)
 	if err != nil {
 		return nil, err

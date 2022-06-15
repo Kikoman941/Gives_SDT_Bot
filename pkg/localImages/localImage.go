@@ -2,16 +2,17 @@ package localImages
 
 import (
 	"Gives_SDT_Bot/pkg/errors"
-	"fmt"
+	"Gives_SDT_Bot/pkg/logging"
 	"os"
 	"path/filepath"
 )
 
 type LocalImages struct {
-	place string // Folder will be created at root of project
+	place  string // Folder will be created at root of project
+	logger *logging.Logger
 }
 
-func NewLocalImage(place string) (*LocalImages, error) {
+func NewLocalImage(place string, logger *logging.Logger) (*LocalImages, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.FormatError("cannot get current working directory", err)
@@ -24,10 +25,11 @@ func NewLocalImage(place string) (*LocalImages, error) {
 			return nil, errors.FormatError("cannot create directory", err)
 		}
 	} else {
-		fmt.Println("Directory for images already exists, used this: " + path)
+		logger.Info("Directory for images already exists, used this: " + path)
 	}
 
 	return &LocalImages{
-		place: path,
+		place:  path,
+		logger: logger,
 	}, nil
 }
