@@ -7,24 +7,24 @@ import (
 	"github.com/go-pg/pg/v10"
 )
 
-type db struct {
-	db     *pg.DB
+type repository struct {
+	client *pg.DB
 	logger *logging.Logger
 }
 
-func (d db) Create(ctx context.Context, us fsm.UserState) error {
+func (r *repository) Create(ctx context.Context, us fsm.UserState) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d db) Update(ctx context.Context, us fsm.UserState) error {
+func (r *repository) Update(ctx context.Context, us fsm.UserState) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func NewStorage(database *pg.DB, logger *logging.Logger) fsm.Storage {
-	return &db{
-		db:     database,
+func NewStorage(dbClient *pg.DB, logger *logging.Logger) fsm.Repository {
+	return &repository{
+		client: dbClient,
 		logger: logger,
 	}
 }
