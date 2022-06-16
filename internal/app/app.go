@@ -5,6 +5,7 @@ import (
 	"Gives_SDT_Bot/internal/config"
 	"Gives_SDT_Bot/internal/fsm"
 	"Gives_SDT_Bot/internal/give"
+	"Gives_SDT_Bot/internal/images"
 	"Gives_SDT_Bot/internal/publisher"
 	"Gives_SDT_Bot/internal/user"
 	"Gives_SDT_Bot/pkg/client/postgresql"
@@ -33,9 +34,16 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		return nil, errors.FormatError("cannot get postgresql client", err)
 	}
 
+	logger.Info("Initialization local image service")
+	lImages, err := localImages.NewLocalImage(".images", logger)
+	if err != nil {
+		return nil, err
+	}
+
 	userService := user.NewUserService(postgresqlClient, logger)
-	giveService := give.NewGiveService(postgresqlClient, logger)
 	fsmService := fsm.NewFSMService(postgresqlClient, logger)
+	giveService := give.NewGiveService(postgresqlClient, logger)
+	imagesService := images.NewImagesService(lImages, logger)
 
 	logger.Info("Creating telegram bot")
 	bot, err := telebot.NewBot(
@@ -48,12 +56,6 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	)
 	if err != nil {
 		return nil, errors.FormatError("cannot create telegram bot", err)
-	}
-
-	logger.Info("Initialization local image service")
-	lImages, err := localImages.NewLocalImage(".images", logger)
-	if err != nil {
-		return nil, err
 	}
 
 	logger.Info("Initialization publisher")

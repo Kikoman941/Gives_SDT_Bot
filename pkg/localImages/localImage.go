@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 )
 
+type Client interface {
+	Save(img string) error
+}
+
 type LocalImages struct {
 	place  string // Folder will be created at root of project
 	logger *logging.Logger
@@ -32,4 +36,8 @@ func NewLocalImage(place string, logger *logging.Logger) (*LocalImages, error) {
 		place:  path,
 		logger: logger,
 	}, nil
+}
+
+func (li *LocalImages) Save(img string) error {
+	return nil
 }
