@@ -2,13 +2,13 @@ package db
 
 import (
 	"Gives_SDT_Bot/internal/give"
+	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
-	"github.com/go-pg/pg/v10"
 )
 
 type repository struct {
-	client *pg.DB
+	client postgresql.Client
 	logger *logging.Logger
 }
 
@@ -27,7 +27,7 @@ func (r *repository) Update(ctx context.Context, give *give.Give) error {
 	panic("implement me")
 }
 
-func NewStorage(dbClient *pg.DB, logger *logging.Logger) give.Repository {
+func NewRepository(dbClient postgresql.Client, logger *logging.Logger) give.Repository {
 	return &repository{
 		client: dbClient,
 		logger: logger,

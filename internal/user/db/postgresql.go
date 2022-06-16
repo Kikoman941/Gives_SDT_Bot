@@ -2,18 +2,18 @@ package db
 
 import (
 	"Gives_SDT_Bot/internal/user"
+	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
-	"github.com/go-pg/pg/v10"
 )
 
 type repository struct {
-	client *pg.DB
+	client postgresql.Client
 	logger *logging.Logger
 }
 
 func (r *repository) Create(ctx context.Context, user *user.User) (int, error) {
-	query := r.client.Model(user)
+	query := r.client.ModelContext(ctx, user)
 	_, err := query.OnConflict("DO_NOTHING").Insert()
 	if err != nil {
 		return 0, err
@@ -22,7 +22,7 @@ func (r *repository) Create(ctx context.Context, user *user.User) (int, error) {
 }
 
 func (r *repository) FindOne(ctx context.Context, user *user.User) error {
-	query := r.client.Model(user)
+	query := r.client.ModelContext(ctx, user)
 
 	err := query.Select()
 	if err != nil {
@@ -32,7 +32,7 @@ func (r *repository) FindOne(ctx context.Context, user *user.User) error {
 }
 
 func (r *repository) Update(ctx context.Context, user *user.User) error {
-	query := r.client.Model(user)
+	query := r.client.ModelContext(ctx, user)
 
 	_, err := query.Update()
 	if err != nil {
@@ -41,7 +41,7 @@ func (r *repository) Update(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-func NewStorage(dbClient *pg.DB, logger *logging.Logger) user.Repository {
+func NewRepository(dbClient postgresql.Client, logger *logging.Logger) user.Repository {
 	return &repository{
 		client: dbClient,
 		logger: logger,

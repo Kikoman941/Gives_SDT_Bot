@@ -7,6 +7,7 @@ import (
 )
 
 type Client interface {
+	ModelContext(c context.Context, model ...interface{}) *pg.Query
 }
 
 func NewClient(ctx context.Context, dsn string) (*pg.DB, error) {
