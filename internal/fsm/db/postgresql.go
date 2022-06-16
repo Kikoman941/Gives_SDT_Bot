@@ -12,7 +12,7 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) UpdateOrInsert(ctx context.Context, us fsm.UserState) error {
+func (r *repository) UpdateOrInsert(ctx context.Context, us *fsm.UserState) error {
 	query := r.client.ModelContext(ctx, us)
 	_, err := query.OnConflict("(UserID) DO_UPDATE").
 		Set("(State) = State").

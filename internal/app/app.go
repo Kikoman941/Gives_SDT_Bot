@@ -65,10 +65,15 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	}
 
 	logger.Info("Initialization admin panel")
-	ap, err := adminPanel.NewAdminPanel(bot, fsmService, config.SuperAdmin, logger)
-	if err != nil {
-		return nil, err
-	}
+	ap := adminPanel.NewAdminPanel(
+		bot,
+		config.SuperAdmin,
+		userService,
+		giveService,
+		fsmService,
+		imagesService,
+		logger,
+	)
 
 	return &App{
 		config:      config,
