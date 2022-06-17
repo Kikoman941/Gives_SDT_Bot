@@ -4,10 +4,14 @@ import (
 	"Gives_SDT_Bot/internal/adminPanel"
 	"Gives_SDT_Bot/internal/config"
 	"Gives_SDT_Bot/internal/fsm"
+	fsmDB "Gives_SDT_Bot/internal/fsm/db"
 	"Gives_SDT_Bot/internal/give"
+	giveDB "Gives_SDT_Bot/internal/give/db"
 	"Gives_SDT_Bot/internal/images"
+	imagesDB "Gives_SDT_Bot/internal/images/db"
 	"Gives_SDT_Bot/internal/publisher"
 	"Gives_SDT_Bot/internal/user"
+	userDB "Gives_SDT_Bot/internal/user/db"
 	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/errors"
 	"Gives_SDT_Bot/pkg/localImages"
@@ -40,10 +44,15 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		return nil, err
 	}
 
-	userService := user.NewUserService(postgresqlClient, logger)
-	fsmService := fsm.NewFSMService(postgresqlClient, logger)
-	giveService := give.NewGiveService(postgresqlClient, logger)
-	imagesService := images.NewImagesService(lImages, logger)
+	userRepo := userDB.NewRepository(postgresqlClient, logger)
+	fsmRepo := fsmDB.NewRepository(postgresqlClient, logger)
+	giveRepo := giveDB.NewRepository(postgresqlClient, logger)
+	imagesRepo := imagesDB.NewRepository(lImages, logger)
+
+	userService := user.NewUserService(userRepo, logger)
+	fsmService := fsm.NewFSMService(fsmRepo, logger)
+	giveService := give.NewGiveService(giveRepo, logger)
+	imagesService := images.NewImagesService(imagesRepo, logger)
 
 	logger.Info("Creating telegram bot")
 	bot, err := telebot.NewBot(
@@ -86,7 +95,8 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 }
 
 func (a *App) Run() {
-	a.bot.Start()
+	a.adminPanel.InitHandlers()
 	a.publisher.Run()
+	a.bot.Start()
 	a.logger.Info("App successfully started")
 }

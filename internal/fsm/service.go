@@ -1,8 +1,6 @@
 package fsm
 
 import (
-	"Gives_SDT_Bot/internal/fsm/db"
-	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 )
@@ -12,9 +10,9 @@ type Service struct {
 	logger     *logging.Logger
 }
 
-func NewFSMService(dbClient postgresql.Client, logger *logging.Logger) *Service {
+func NewFSMService(repository Repository, logger *logging.Logger) *Service {
 	return &Service{
-		repository: db.NewRepository(dbClient, logger),
+		repository: repository,
 		logger:     logger,
 	}
 }

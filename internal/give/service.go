@@ -1,8 +1,6 @@
 package give
 
 import (
-	"Gives_SDT_Bot/internal/give/db"
-	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 )
 
@@ -11,9 +9,9 @@ type Service struct {
 	logger     *logging.Logger
 }
 
-func NewGiveService(dbClient postgresql.Client, logger *logging.Logger) *Service {
+func NewGiveService(repository Repository, logger *logging.Logger) *Service {
 	return &Service{
-		repository: db.NewRepository(dbClient, logger),
+		repository: repository,
 		logger:     logger,
 	}
 }

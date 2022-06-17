@@ -1,8 +1,6 @@
 package user
 
 import (
-	"Gives_SDT_Bot/internal/user/db"
-	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 	"strconv"
@@ -13,9 +11,9 @@ type Service struct {
 	logger     *logging.Logger
 }
 
-func NewUserService(dbClient postgresql.Client, logger *logging.Logger) *Service {
+func NewUserService(repository Repository, logger *logging.Logger) *Service {
 	return &Service{
-		repository: db.NewRepository(dbClient, logger),
+		repository: repository,
 		logger:     logger,
 	}
 }
