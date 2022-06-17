@@ -22,7 +22,7 @@ func (s *Service) SetState(userId int, state string) error {
 		UserID: userId,
 		State:  state,
 	}
-	err := s.repository.UpdateOrInsert(context.TODO(), userState)
+	err := s.repository.InsertOrUpdate(context.TODO(), userState)
 	if err != nil {
 		s.logger.Errorf("cannot set state=%s for user with tgId=%d", state, userId)
 		return err
