@@ -12,7 +12,7 @@ import (
 
 type AdminPanel struct {
 	bot           *telebot.Bot
-	adminGroup    []int
+	adminGroup    []int64
 	userService   *user.Service
 	giveService   *give.Service
 	fsmService    *fsm.Service
@@ -29,8 +29,8 @@ func NewAdminPanel(
 	imagesService *images.Service,
 	logger *logging.Logger,
 ) *AdminPanel {
-	var adminGroup []int
-	adminGroup = append(adminGroup, superAdmin)
+	var adminGroup []int64
+	adminGroup = append(adminGroup, int64(superAdmin))
 
 	data.InitMenus()
 
@@ -43,4 +43,8 @@ func NewAdminPanel(
 		imagesService: imagesService,
 		logger:        logger,
 	}
+}
+
+func (ad *AdminPanel) refreshAdmins(admins []int64) {
+	ad.adminGroup = admins
 }

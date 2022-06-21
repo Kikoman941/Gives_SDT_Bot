@@ -2,8 +2,8 @@ package user
 
 import (
 	"Gives_SDT_Bot/pkg/logging"
+	"Gives_SDT_Bot/pkg/utils"
 	"context"
-	"strconv"
 )
 
 type Service struct {
@@ -20,7 +20,7 @@ func NewUserService(repository Repository, logger *logging.Logger) *Service {
 
 func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 	user := &User{
-		TgID: strconv.FormatInt(telegramId, 10),
+		TgID: utils.Int64ToString(telegramId),
 	}
 
 	if isAdmin {
@@ -33,4 +33,38 @@ func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 		return 0, err
 	}
 	return userId, nil
+}
+
+func (s *Service) GetUserId(telegramId int64) (int, error) {
+	user := &User{
+		TgID: utils.Int64ToString(telegramId),
+	}
+
+	if err := s.repository.FindOne(context.TODO(), user); err != nil {
+		s.logger.Errorf("cannot find user with tgId=%d", telegramId)
+		return 0, err
+	}
+
+	return user.ID, nil
+}
+
+func (s *Service) GetAdmins() ([]int64, error) {
+	var adminsIds []int64
+
+	admins, err := s.repository.FindAllWithConditions(context.TODO(), "is_admin=true")
+	if err != nil {
+		s.logger.Error("cannot get admins")
+		return nil, err
+	}
+
+	for _, admin := range admins {
+		adminId, err := utils.StringToInt64(admin.TgID)
+		if err != nil {
+			s.logger.Errorf("cannot parse admin tgId=%s to int64", admin.TgID)
+			return nil, err
+		}
+		adminsIds = append(adminsIds, adminId)
+	}
+
+	return adminsIds, nil
 }

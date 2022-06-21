@@ -3,6 +3,7 @@ package adminPanel
 import (
 	"Gives_SDT_Bot/internal/adminPanel/data"
 	"gopkg.in/telebot.v3"
+	"gopkg.in/telebot.v3/middleware"
 )
 
 func (ad *AdminPanel) InitHandlers() {
@@ -10,48 +11,62 @@ func (ad *AdminPanel) InitHandlers() {
 	ad.bot.Handle(
 		data.COMMAND_START,
 		func(ctx telebot.Context) error {
+			reply := ctx.Reply(data.START_MESSAGE, data.START_MENU)
+
 			userID, err := ad.userService.AddUser(ctx.Chat().ID, false)
 			if err != nil {
 				return err
+			} else if userID == 0 {
+				ad.logger.Infof("User with tgId=%d, already exists", ctx.Chat().ID)
+				return reply
 			}
 
 			if err := ad.fsmService.SetState(userID, data.MAIN_MENU_STATE); err != nil {
 				return err
 			}
 
-			return ctx.Reply(data.START_MESSAGE, data.START_MENU)
+			return reply
 		},
 	)
 
 	// Комманда /refreshAdmins. Обновляет список админов для мидлваря Whitelist
-	//ad.bot.Handle(
-	//	data.COMMAND_REFRESH_ADMINS,
-	//	func(ctx telebot.Context) error {
-	//		admins, err := ad.getAdmins()
-	//		if err != nil {
-	//			return err
-	//		}
-	//
-	//		ad.refreshAdmins(admins)
-	//		ad.InitHandlers()
-	//
-	//		return ctx.Reply(ad.telegramData.Messages["successRefreshAdmins"])
-	//	},
-	//	middleware.Whitelist(ad.adminGroup...),
-	//)
-	//
-	//// Кнопка "Назад в главное меню", отмена любого состояния до старта
-	//ad.bot.Handle(
-	//	&ad.telegramData.Buttons.MainMenuButton,
-	//	func(ctx telebot.Context) error {
-	//		if err := ad.fsm.setState(ctx.Chat().ID, telegram.MAIN_MENU); err != nil {
-	//			return err
-	//		}
-	//
-	//		return ctx.Reply(ad.telegramData.Messages["startMessage"], ad.telegramData.Menus.StartMenu)
-	//	},
-	//	middleware.Whitelist(ad.adminGroup...),
-	//)
+	ad.bot.Handle(
+		data.COMMAND_REFRESH_ADMINS,
+		func(ctx telebot.Context) error {
+			admins, err := ad.userService.GetAdmins()
+			if err != nil {
+				return err
+			} else if len(admins) == 0 {
+				return ctx.Reply(data.NO_ADMINS_MESSAGE)
+			}
+
+			ad.refreshAdmins(admins)
+			ad.InitHandlers()
+
+			return ctx.Reply(data.SUCCESS_REFRESH_ADMINS_MESSAGE)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	// Кнопка "Назад в главное меню", отмена любого состояния до старта
+	ad.bot.Handle(
+		&data.MAIN_MENU_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserId(ctx.Chat().ID)
+			if err != nil {
+				return err
+			} else if userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.START_MENU)
+			}
+
+			if err := ad.fsmService.SetState(userId, data.MAIN_MENU_STATE); err != nil {
+				return err
+			}
+
+			return ctx.Reply(data.START_MESSAGE, data.START_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
 	//
 	//ad.bot.Handle(
 	//	&ad.telegramData.Buttons.CreateGiveButton,
