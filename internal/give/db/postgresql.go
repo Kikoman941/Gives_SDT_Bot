@@ -12,9 +12,13 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) Create(ctx context.Context, give *give.Give) (int, error) {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) Create(ctx context.Context, give *give.Give) error {
+	query := r.client.ModelContext(ctx, give)
+	_, err := query.Insert()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *repository) FindOne(ctx context.Context, give *give.Give) error {

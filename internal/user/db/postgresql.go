@@ -12,13 +12,13 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) Create(ctx context.Context, user *user.User) (int, error) {
+func (r *repository) Create(ctx context.Context, user *user.User) error {
 	query := r.client.ModelContext(ctx, user)
 	_, err := query.OnConflict("DO NOTHING").Insert()
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return user.ID, nil
+	return nil
 }
 
 func (r *repository) FindAllWithConditions(ctx context.Context, conditions string) ([]user.User, error) {
@@ -34,10 +34,10 @@ func (r *repository) FindAllWithConditions(ctx context.Context, conditions strin
 	return users, nil
 }
 
-func (r *repository) FindOne(ctx context.Context, user *user.User) error {
-	query := r.client.ModelContext(ctx, user)
-
-	err := query.Select()
+func (r *repository) FindOneWithConditions(ctx context.Context, user *user.User, conditions string) error {
+	err := r.client.ModelContext(ctx, user).
+		Where(conditions).
+		Select()
 	if err != nil {
 		return err
 	}

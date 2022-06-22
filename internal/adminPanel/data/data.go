@@ -9,4 +9,10 @@ func InitMenus() {
 			MY_GIVES_BUTTON,
 		},
 	)
+
+	CANCEL_MENU.Reply(
+		[]telebot.Btn{
+			MAIN_MENU_BUTTON,
+		},
+	)
 }

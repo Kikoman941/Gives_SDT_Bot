@@ -4,6 +4,7 @@ import (
 	"Gives_SDT_Bot/pkg/logging"
 	"Gives_SDT_Bot/pkg/utils"
 	"context"
+	"fmt"
 )
 
 type Service struct {
@@ -27,21 +28,18 @@ func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 		user.IsAdmin = true
 	}
 
-	userId, err := s.repository.Create(context.TODO(), user)
-	if err != nil {
+	if err := s.repository.Create(context.TODO(), user); err != nil {
 		s.logger.Errorf("cannot create user with tgId=%s:\n%s", user.TgID, err)
 		return 0, err
 	}
-	return userId, nil
+	return user.ID, nil
 }
 
-func (s *Service) GetUserId(telegramId int64) (int, error) {
-	user := &User{
-		TgID: utils.Int64ToString(telegramId),
-	}
+func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
+	user := &User{}
 
-	if err := s.repository.FindOne(context.TODO(), user); err != nil {
-		s.logger.Errorf("cannot find user with tgId=%d", telegramId)
+	if err := s.repository.FindOneWithConditions(context.TODO(), user, fmt.Sprintf("tg_id='%d'", telegramId)); err != nil {
+		s.logger.Errorf("cannot find user with tgId=%d:\n%s", telegramId, err)
 		return 0, err
 	}
 

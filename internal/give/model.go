@@ -8,6 +8,7 @@ type Give struct {
 	Owner      int       `pg:"owner"`
 	StartTime  time.Time `pg:"start_time"`
 	FinishTime time.Time `pg:"finish_time"`
+	Title      string    `pg:"title"`
 	Text       string    `pg:"text"`
 	Image      string    `pg:"image"`
 }
