@@ -19,8 +19,9 @@ func NewGiveService(repository Repository, logger *logging.Logger) *Service {
 
 func (s *Service) CreateGive(giveTitle string, ownerId int) (int, error) {
 	give := &Give{
-		Owner: ownerId,
-		Title: giveTitle,
+		IsActive: false,
+		Owner:    ownerId,
+		Title:    giveTitle,
 	}
 
 	if err := s.repository.Create(context.TODO(), give); err != nil {

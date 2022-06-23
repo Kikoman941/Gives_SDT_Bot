@@ -70,14 +70,31 @@ func (ad *AdminPanel) InitHandlers() {
 		func(ctx telebot.Context) error {
 			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
 			if err != nil || userId == 0 {
-				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.START_MENU)
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
 			}
 
 			if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_STATE); err != nil {
-				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.START_MENU)
+				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
 			return ctx.Reply(data.ENTER_GIVE_TITLE_MESSAGE, data.CANCEL_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+	// Кнопка "Мои конкурсы 📋", выводит список конкурсов пользователя в виде кнопок
+	ad.bot.Handle(
+		&data.MY_GIVES_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
+			}
+
+			if err := ad.fsmService.SetState(userId, data.SELECT_OWN_GIVE_STATE); err != nil {
+				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			return ctx.Reply(data.SELECT_OWN_GIVE_MESSAGE, data.CANCEL_MENU)
 		},
 		middleware.Whitelist(ad.adminGroup...),
 	)
@@ -88,21 +105,20 @@ func (ad *AdminPanel) InitHandlers() {
 		func(ctx telebot.Context) error {
 			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
 			if err != nil || userId == 0 {
-				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.START_MENU)
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
 			}
 
 			userState, err := ad.fsmService.GetState(userId)
 			if err != nil || userState == "" {
-				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.START_MENU)
+				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
 			switch userState {
 			case data.ENTER_GIVE_TITLE_STATE:
 				giveTitle := ctx.Message().Text
 				giveId, err := ad.giveService.CreateGive(giveTitle, userId)
-				ad.logger.Info("туту")
 				if err != nil || giveId == 0 {
-					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.START_MENU)
+					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 				return ctx.Reply("svfs")
 			default:
