@@ -48,7 +48,7 @@ func (ad *AdminPanel) InitHandlers() {
 
 	// Кнопка "Назад в главное меню", отмена любого состояния до старта
 	ad.bot.Handle(
-		&data.MAIN_MENU_BUTTON,
+		&data.BACK_TO_START_BUTTON,
 		func(ctx telebot.Context) error {
 			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
 			if err != nil || userId == 0 {
@@ -94,7 +94,16 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
-			return ctx.Reply(data.SELECT_OWN_GIVE_MESSAGE, data.CANCEL_MENU)
+			userGives, err := ad.giveService.GetAllUserGives(userId)
+			if err != nil {
+				return ctx.Reply(data.CANNOT_GET_USER_GIVES_MESSAGE, data.START_MENU)
+			}
+
+			givesMenu := data.CreateReplyMenu(
+				GivesToButtons(userGives)...,
+			)
+
+			return ctx.Reply(data.SELECT_OWN_GIVE_MESSAGE, givesMenu)
 		},
 		middleware.Whitelist(ad.adminGroup...),
 	)
@@ -120,6 +129,11 @@ func (ad *AdminPanel) InitHandlers() {
 				if err != nil || giveId == 0 {
 					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
+
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_DESCRIPTION_STATE); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
 				return ctx.Reply("svfs")
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)

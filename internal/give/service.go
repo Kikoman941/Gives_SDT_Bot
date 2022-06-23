@@ -3,6 +3,7 @@ package give
 import (
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Service struct {
@@ -29,4 +30,13 @@ func (s *Service) CreateGive(giveTitle string, ownerId int) (int, error) {
 	}
 
 	return give.Id, nil
+}
+
+func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
+	gives, err := s.repository.FindAllWithConditions(context.TODO(), spew.Sprintf("owner=%d", userId))
+	if err != nil {
+		s.logger.Errorf("cannot get userId=%d gives:\n%s", userId, err)
+	}
+
+	return gives, nil
 }

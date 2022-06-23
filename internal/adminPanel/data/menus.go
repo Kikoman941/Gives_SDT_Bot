@@ -7,8 +7,17 @@ var (
 	CANCEL_MENU = &telebot.ReplyMarkup{ResizeKeyboard: true}
 )
 
-func CreateReplyMenu() *telebot.ReplyMarkup {
-	return &telebot.ReplyMarkup{}
+func CreateReplyMenu(buttons ...telebot.Btn) *telebot.ReplyMarkup {
+	var rows []telebot.Row
+	menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+
+	for _, button := range buttons {
+		rows = append(rows, telebot.Row{button})
+	}
+
+	menu.Reply(rows...)
+
+	return menu
 }
 
 func CreateInlineMenu() *telebot.ReplyMarkup {

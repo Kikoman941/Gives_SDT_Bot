@@ -12,7 +12,7 @@ func InitMenus() {
 
 	CANCEL_MENU.Reply(
 		[]telebot.Btn{
-			MAIN_MENU_BUTTON,
+			BACK_TO_START_BUTTON,
 		},
 	)
 }
