@@ -9,6 +9,7 @@ CREATE TABLE public.users (
 CREATE TABLE public.users_states (
 	user_id int4 NOT NULL,
 	state text NOT NULL,
+	data text NULL,
 	CONSTRAINT users_states_un UNIQUE (user_id),
 	CONSTRAINT users_states_fk FOREIGN KEY (user_id) REFERENCES public.users(id)
 );

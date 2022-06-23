@@ -3,7 +3,7 @@ package give
 import (
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
-	"github.com/davecgh/go-spew/spew"
+	"fmt"
 )
 
 type Service struct {
@@ -33,10 +33,24 @@ func (s *Service) CreateGive(giveTitle string, ownerId int) (int, error) {
 }
 
 func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
-	gives, err := s.repository.FindAllWithConditions(context.TODO(), spew.Sprintf("owner=%d", userId))
+	gives, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("owner=%d", userId))
 	if err != nil {
 		s.logger.Errorf("cannot get userId=%d gives: %s", userId, err)
 	}
 
 	return gives, nil
+}
+
+func (s *Service) UpdateGive(giveId int, update string) error {
+	err := s.repository.UpdateWithConditions(
+		context.TODO(),
+		fmt.Sprintf("id=%d", giveId),
+		update,
+	)
+	if err != nil {
+		s.logger.Errorf("cannot do update giveId=%d: %s", giveId, err)
+		return err
+	}
+
+	return nil
 }

@@ -2,8 +2,10 @@ package adminPanel
 
 import (
 	"Gives_SDT_Bot/internal/adminPanel/data"
+	"fmt"
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
+	"strconv"
 )
 
 func (ad *AdminPanel) InitHandlers() {
@@ -21,7 +23,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return reply
 			}
 
-			if err := ad.fsmService.SetState(userID, data.MAIN_MENU_STATE); err != nil {
+			if err := ad.fsmService.SetState(userID, data.MAIN_MENU_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE)
 			}
 
@@ -55,7 +57,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.START_MENU)
 			}
 
-			if err := ad.fsmService.SetState(userId, data.MAIN_MENU_STATE); err != nil {
+			if err := ad.fsmService.SetState(userId, data.MAIN_MENU_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.START_MENU)
 			}
 
@@ -73,7 +75,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_STATE); err != nil {
+			if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
@@ -90,7 +92,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.SetState(userId, data.SELECT_OWN_GIVE_STATE); err != nil {
+			if err := ad.fsmService.SetState(userId, data.SELECT_OWN_GIVE_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
@@ -118,11 +120,11 @@ func (ad *AdminPanel) InitHandlers() {
 			}
 
 			userState, err := ad.fsmService.GetState(userId)
-			if err != nil || userState == "" {
+			if err != nil || userState == nil {
 				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
-			switch userState {
+			switch userState.State {
 			case data.ENTER_GIVE_TITLE_STATE:
 				giveTitle := ctx.Message().Text
 				giveId, err := ad.giveService.CreateGive(giveTitle, userId)
@@ -130,11 +132,31 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 
-				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_DESCRIPTION_STATE); err != nil {
+				d := map[string]string{
+					"giveId": strconv.Itoa(giveId),
+				}
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_DESCRIPTION_STATE, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply("svfs")
+				return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_MESSAGE)
+			case data.ENTER_GIVE_DESCRIPTION_STATE:
+				giveDesc := ctx.Message().Text
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE)
+				}
+
+				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf("description='%s'", giveDesc))
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE)
+				}
+
+				if err := ad.fsmService.SetState(userId, data.UPLOAD_GIVE_IMAGE_STATE, nil); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.UPLOAD_GIVE_IMAGE_MESSAGE)
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)
 			}

@@ -4,5 +4,5 @@ import "context"
 
 type Repository interface {
 	InsertOrUpdate(ctx context.Context, us *UserState) error
-	FindOneWithConditions(ctx context.Context, us *UserState, conditions string) error
+	FindAllWithConditions(ctx context.Context, conditions string) ([]UserState, error)
 }

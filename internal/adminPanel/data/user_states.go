@@ -5,4 +5,5 @@ const (
 	SELECT_OWN_GIVE_STATE        = "select_own_give"
 	ENTER_GIVE_TITLE_STATE       = "enter_give_title"
 	ENTER_GIVE_DESCRIPTION_STATE = "enter_give_description"
+	UPLOAD_GIVE_IMAGE_STATE      = "upload_give_image"
 )

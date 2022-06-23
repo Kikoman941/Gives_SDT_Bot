@@ -36,14 +36,13 @@ func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 }
 
 func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
-	user := &User{}
-
-	if err := s.repository.FindOneWithConditions(context.TODO(), user, fmt.Sprintf("tg_id='%d'", telegramId)); err != nil {
+	users, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("tg_id='%d'", telegramId))
+	if err != nil {
 		s.logger.Errorf("cannot find user with tgId=%d: %s", telegramId, err)
 		return 0, err
 	}
 
-	return user.ID, nil
+	return users[0].ID, nil
 }
 
 func (s *Service) GetAdmins() ([]int64, error) {

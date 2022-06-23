@@ -34,9 +34,17 @@ func (r *repository) FindAllWithConditions(ctx context.Context, conditions strin
 	return gives, nil
 }
 
-func (r *repository) Update(ctx context.Context, give *give.Give) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) UpdateWithConditions(ctx context.Context, conditions string, update string) error {
+	var g give.Give
+	_, err := r.client.ModelContext(ctx, &g).
+		Where(conditions).
+		Set(update).
+		Update()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewRepository(dbClient postgresql.Client, logger *logging.Logger) give.Repository {

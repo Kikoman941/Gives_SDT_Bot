@@ -14,7 +14,7 @@ type repository struct {
 
 func (r *repository) Create(ctx context.Context, user *user.User) error {
 	query := r.client.ModelContext(ctx, user)
-	_, err := query.OnConflict("DO NOTHING").Insert()
+	_, err := query.OnConflict("(tg_id) DO NOTHING").Insert()
 	if err != nil {
 		return err
 	}
@@ -32,16 +32,6 @@ func (r *repository) FindAllWithConditions(ctx context.Context, conditions strin
 	}
 
 	return users, nil
-}
-
-func (r *repository) FindOneWithConditions(ctx context.Context, user *user.User, conditions string) error {
-	err := r.client.ModelContext(ctx, user).
-		Where(conditions).
-		Select()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *repository) Update(ctx context.Context, user *user.User) error {

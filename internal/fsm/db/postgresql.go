@@ -22,14 +22,16 @@ func (r *repository) InsertOrUpdate(ctx context.Context, us *fsm.UserState) erro
 	return nil
 }
 
-func (r *repository) FindOneWithConditions(ctx context.Context, us *fsm.UserState, conditions string) error {
-	err := r.client.ModelContext(ctx, us).
+func (r *repository) FindAllWithConditions(ctx context.Context, conditions string) ([]fsm.UserState, error) {
+	var states []fsm.UserState
+
+	err := r.client.ModelContext(ctx, &states).
 		Where(conditions).
 		Select()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return states, nil
 }
 
 func NewRepository(dbClient postgresql.Client, logger *logging.Logger) fsm.Repository {
