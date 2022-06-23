@@ -144,12 +144,12 @@ func (ad *AdminPanel) InitHandlers() {
 				giveDesc := ctx.Message().Text
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
-					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE)
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
 				}
 
 				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf("description='%s'", giveDesc))
 				if err != nil {
-					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE)
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 
 				if err := ad.fsmService.SetState(userId, data.UPLOAD_GIVE_IMAGE_STATE, nil); err != nil {
