@@ -39,7 +39,7 @@ func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
 	user := &User{}
 
 	if err := s.repository.FindOneWithConditions(context.TODO(), user, fmt.Sprintf("tg_id='%d'", telegramId)); err != nil {
-		s.logger.Errorf("cannot find user with tgId=%d:\n%s", telegramId, err)
+		s.logger.Errorf("cannot find user with tgId=%d: %s", telegramId, err)
 		return 0, err
 	}
 
@@ -58,7 +58,7 @@ func (s *Service) GetAdmins() ([]int64, error) {
 	for _, admin := range admins {
 		adminId, err := utils.StringToInt64(admin.TgID)
 		if err != nil {
-			s.logger.Errorf("cannot parse admin tgId=%s to int64", admin.TgID)
+			s.logger.Errorf("cannot parse admin tgId=%s to int64: %s", admin.TgID, err)
 			return nil, err
 		}
 		adminsIds = append(adminsIds, adminId)
