@@ -6,6 +6,8 @@ import (
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func (ad *AdminPanel) InitHandlers() {
@@ -152,16 +154,101 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 
-				if err := ad.fsmService.SetState(userId, data.UPLOAD_GIVE_IMAGE_STATE, nil); err != nil {
+				d := map[string]string{
+					"giveId": userState.Data["giveId"],
+				}
+				if err := ad.fsmService.SetState(userId, data.UPLOAD_GIVE_IMAGE_STATE, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 				}
 
 				return ctx.Reply(data.UPLOAD_GIVE_IMAGE_MESSAGE)
+			case data.ENTER_GIVE_START_FINISH_STATE:
+				duration := strings.Split(ctx.Message().Text, " - ")
+				startAt, err := StringToTime(duration[0], ad.logger)
+				if err != nil || startAt.IsZero() {
+					fmt.Println(startAt)
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_MESSAGE, duration[0]), data.CANCEL_MENU)
+				}
+				fmt.Println(startAt)
+				finishAt, err := StringToTime(duration[1], ad.logger)
+				if err != nil || finishAt.IsZero() {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_MESSAGE, duration[1]), data.CANCEL_MENU)
+				}
+
+				if finishAt.Before(time.Now()) {
+					return ctx.Reply(data.FINISH_DATE_HAS_PASSED_MESSAGE)
+				}
+				if finishAt.Before(startAt) {
+					return ctx.Reply(data.FINISH_DATE_BEFORE_START_MESSAGE)
+				}
+
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				err = ad.giveService.UpdateGive(
+					giveId,
+					fmt.Sprintf(
+						"start_at='%s', finish_at='%s'",
+						startAt.Format(time.RFC3339),
+						finishAt.Format(time.RFC3339),
+					),
+				)
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				d := map[string]string{
+					"giveId": userState.Data["giveId"],
+				}
+				if err := ad.fsmService.SetState(userId, data.ENTER_WINNERS_COUNT_STATE, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_WINNERS_COUNT_MESSAGE)
+
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)
 			}
 		},
 		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	ad.bot.Handle(
+		telebot.OnPhoto,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			if userState.State == data.UPLOAD_GIVE_IMAGE_STATE {
+				img := ctx.Message().Photo.File
+				filename, err := ad.imagesService.SaveFile(&img, userState.Data["giveId"])
+				if err != nil || filename == "" {
+					return ctx.Reply(data.CANNOT_DOWNLOAD_IMAGE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf("image='%s'", filename))
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				d := map[string]string{
+					"giveId": userState.Data["giveId"],
+				}
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_START_FINISH_STATE, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_GIVE_START_FINISH_MESSAGE)
+			}
+
+			return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)
+		},
 	)
 
 	//ad.bot.Handle(

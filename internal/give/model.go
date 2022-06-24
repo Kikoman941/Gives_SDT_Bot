@@ -11,7 +11,7 @@ type Give struct {
 	FinishTime     time.Time `pg:"finish_at"`
 	Title          string    `pg:"title"`
 	Description    string    `pg:"description"`
-	Images         []string  `pg:"images"`
+	Image          string    `pg:"image"`
 	Channel        int       `pg:"channel"`
 	TargetChannels []int     `pg:"target_channels"`
 }

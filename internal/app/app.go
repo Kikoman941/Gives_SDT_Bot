@@ -14,19 +14,17 @@ import (
 	userDB "Gives_SDT_Bot/internal/user/db"
 	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/errors"
-	"Gives_SDT_Bot/pkg/localImages"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 	"gopkg.in/telebot.v3"
 )
 
 type App struct {
-	config      *config.Config
-	logger      *logging.Logger
-	bot         *telebot.Bot
-	publisher   *publisher.Publisher
-	adminPanel  *adminPanel.AdminPanel
-	localImages *localImages.LocalImages
+	config     *config.Config
+	logger     *logging.Logger
+	bot        *telebot.Bot
+	publisher  *publisher.Publisher
+	adminPanel *adminPanel.AdminPanel
 }
 
 func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
@@ -37,22 +35,6 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	if err != nil {
 		return nil, errors.FormatError("cannot get postgresql client", err)
 	}
-
-	logger.Info("Initialization local image service")
-	lImages, err := localImages.NewLocalImage(".images", logger)
-	if err != nil {
-		return nil, err
-	}
-
-	userRepo := userDB.NewRepository(postgresqlClient, logger)
-	fsmRepo := fsmDB.NewRepository(postgresqlClient, logger)
-	giveRepo := giveDB.NewRepository(postgresqlClient, logger)
-	imagesRepo := imagesDB.NewRepository(lImages, logger)
-
-	userService := user.NewUserService(userRepo, logger)
-	fsmService := fsm.NewFSMService(fsmRepo, logger)
-	giveService := give.NewGiveService(giveRepo, logger)
-	imagesService := images.NewImagesService(imagesRepo, logger)
 
 	logger.Info("Creating telegram bot")
 	bot, err := telebot.NewBot(
@@ -66,6 +48,18 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	if err != nil {
 		return nil, errors.FormatError("cannot create telegram bot", err)
 	}
+
+	logger.Info("Initialization local image service")
+
+	userRepo := userDB.NewRepository(postgresqlClient, logger)
+	fsmRepo := fsmDB.NewRepository(postgresqlClient, logger)
+	giveRepo := giveDB.NewRepository(postgresqlClient, logger)
+	imagesRepo := imagesDB.NewRepository(bot, logger)
+
+	userService := user.NewUserService(userRepo, logger)
+	fsmService := fsm.NewFSMService(fsmRepo, logger)
+	giveService := give.NewGiveService(giveRepo, logger)
+	imagesService := images.NewImagesService(imagesRepo, logger)
 
 	logger.Info("Initialization publisher")
 	pub, err := publisher.NewPublisher(bot, logger)
@@ -85,12 +79,11 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	)
 
 	return &App{
-		config:      config,
-		logger:      logger,
-		bot:         bot,
-		publisher:   pub,
-		adminPanel:  ap,
-		localImages: lImages,
+		config:     config,
+		logger:     logger,
+		bot:        bot,
+		publisher:  pub,
+		adminPanel: ap,
 	}, nil
 }
 
