@@ -2,7 +2,7 @@ package data
 
 import "gopkg.in/telebot.v3"
 
-func InitMenus() {
+func InitMenu() {
 	START_MENU.Reply(
 		[]telebot.Btn{
 			CREATE_GIVE_BUTTON,

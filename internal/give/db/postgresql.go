@@ -34,11 +34,11 @@ func (r *repository) FindAllWithConditions(ctx context.Context, conditions strin
 	return gives, nil
 }
 
-func (r *repository) UpdateWithConditions(ctx context.Context, conditions string, update string) error {
+func (r *repository) UpdateWithConditions(ctx context.Context, conditions string, update string, params ...interface{}) error {
 	var g give.Give
 	_, err := r.client.ModelContext(ctx, &g).
 		Where(conditions).
-		Set(update).
+		Set(update, params...).
 		Update()
 	if err != nil {
 		return err

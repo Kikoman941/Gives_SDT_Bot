@@ -33,7 +33,7 @@ func (s *Service) CreateGive(giveTitle string, ownerId int) (int, error) {
 }
 
 func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
-	gives, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("owner=%d", userId))
+	gives, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"owner\"=%d", userId))
 	if err != nil {
 		s.logger.Errorf("cannot get userId=%d gives: %s", userId, err)
 	}
@@ -41,11 +41,12 @@ func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
 	return gives, nil
 }
 
-func (s *Service) UpdateGive(giveId int, update string) error {
+func (s *Service) UpdateGive(giveId int, update string, params ...interface{}) error {
 	err := s.repository.UpdateWithConditions(
 		context.TODO(),
-		fmt.Sprintf("id=%d", giveId),
+		fmt.Sprintf("\"id\"=%d", giveId),
 		update,
+		params...,
 	)
 	if err != nil {
 		s.logger.Errorf("cannot do update giveId=%d: %s", giveId, err)

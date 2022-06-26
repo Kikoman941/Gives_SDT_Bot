@@ -19,9 +19,6 @@ func main() {
 	}
 
 	logger.Info("Creating application")
-	app, err := app.NewApp(cfg, logger)
-	if err != nil {
-		logger.Fatal(err)
-	}
+	app := app.NewApp(cfg, logger)
 	app.Run()
 }

@@ -2,7 +2,9 @@ package adminPanel
 
 import (
 	"Gives_SDT_Bot/internal/adminPanel/data"
+	"Gives_SDT_Bot/pkg/utils"
 	"fmt"
+	"github.com/go-pg/pg/v10"
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 	"strconv"
@@ -126,7 +128,9 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
+			// Обслуживаем fsm
 			switch userState.State {
+			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_STATE:
 				giveTitle := ctx.Message().Text
 				giveId, err := ad.giveService.CreateGive(giveTitle, userId)
@@ -142,6 +146,7 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_MESSAGE)
+			// Ввод описания конкурса
 			case data.ENTER_GIVE_DESCRIPTION_STATE:
 				giveDesc := ctx.Message().Text
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
@@ -149,7 +154,7 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
 				}
 
-				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf("description='%s'", giveDesc))
+				err = ad.giveService.UpdateGive(giveId, `"description"=?`, giveDesc)
 				if err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
@@ -162,15 +167,16 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				return ctx.Reply(data.UPLOAD_GIVE_IMAGE_MESSAGE)
+			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_STATE:
 				duration := strings.Split(ctx.Message().Text, " - ")
-				startAt, err := StringToTime(duration[0], ad.logger)
+				startAt, err := StringToTimeMSK(duration[0], ad.logger)
 				if err != nil || startAt.IsZero() {
 					fmt.Println(startAt)
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_MESSAGE, duration[0]), data.CANCEL_MENU)
 				}
 				fmt.Println(startAt)
-				finishAt, err := StringToTime(duration[1], ad.logger)
+				finishAt, err := StringToTimeMSK(duration[1], ad.logger)
 				if err != nil || finishAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_MESSAGE, duration[1]), data.CANCEL_MENU)
 				}
@@ -185,11 +191,16 @@ func (ad *AdminPanel) InitHandlers() {
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				err = ad.giveService.UpdateGive(
 					giveId,
-					fmt.Sprintf(
-						"start_at='%s', finish_at='%s'",
-						startAt.Format(time.RFC3339),
-						finishAt.Format(time.RFC3339),
-					),
+					`"startAt"=?`,
+					startAt.Format(time.RFC3339),
+				)
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+				err = ad.giveService.UpdateGive(
+					giveId,
+					`"finishAt"=?`,
+					finishAt.Format(time.RFC3339),
 				)
 				if err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
@@ -203,7 +214,59 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				return ctx.Reply(data.ENTER_WINNERS_COUNT_MESSAGE)
+			// Ввод колличества победителей конкурса
+			case data.ENTER_WINNERS_COUNT_STATE:
+				winnersCount, err := strconv.Atoi(ctx.Message().Text)
+				if err != nil || winnersCount <= 0 {
+					return ctx.Reply(data.CANNOT_PARSE_WINNERS_COUNT_MESSAGE, data.CANCEL_MENU)
+				}
 
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
+				}
+				err = ad.giveService.UpdateGive(giveId, `"winnersCount"=?`, winnersCount)
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				d := map[string]string{
+					"giveId": userState.Data["giveId"],
+				}
+				if err := ad.fsmService.SetState(userId, data.ENTER_SUBSCRIPTION_CHANNELS_STATE, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_SUBSCRIPTION_CHANNELS_MESSAGE)
+			// Ввод каналов для проверки подписки
+			case data.ENTER_SUBSCRIPTION_CHANNELS_STATE:
+				channels := strings.Split(ctx.Message().Text, " ")
+				for _, ch := range channels {
+					channelId, err := utils.StringToInt64(ch)
+					if err != nil {
+						ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channelId, err)
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_SUBSCRIPTION_CHANNEL_MESSAGE, channelId), data.CANCEL_MENU)
+					}
+
+					isAdmin, err := ad.checkBotIsAdmin(channelId)
+					if err != nil {
+						ad.logger.Errorf("cannot check bot is admin in chatId=%d: %s", channelId, err)
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_MESSAGE, channelId), data.CANCEL_MENU)
+					} else if isAdmin == false {
+						return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_MESSAGE, channelId), data.CANCEL_MENU)
+					}
+				}
+
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
+				}
+				err = ad.giveService.UpdateGive(giveId, `"targetChannels"=?`, pg.Array(channels))
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply("sdfvsdfv")
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)
 			}
@@ -211,6 +274,7 @@ func (ad *AdminPanel) InitHandlers() {
 		middleware.Whitelist(ad.adminGroup...),
 	)
 
+	// Тригерится на любое фото, только фото, НЕ вложеный файл
 	ad.bot.Handle(
 		telebot.OnPhoto,
 		func(ctx telebot.Context) error {
@@ -224,6 +288,8 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
+			// Обслуживаем fsm
+			// Загрузка обложки конкурса
 			if userState.State == data.UPLOAD_GIVE_IMAGE_STATE {
 				img := ctx.Message().Photo.File
 				filename, err := ad.imagesService.SaveFile(&img, userState.Data["giveId"])
@@ -232,7 +298,7 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
-				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf("image='%s'", filename))
+				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf(`"image"='%s'`, filename))
 				if err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}

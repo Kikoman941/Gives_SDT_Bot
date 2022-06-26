@@ -6,12 +6,13 @@ type Give struct {
 	tableName      struct{}  `pg:"public.gives"`
 	Id             int       `pg:"id,pk"`
 	Owner          int       `pg:"owner"`
-	IsActive       bool      `pg:"is_active"`
-	StartTime      time.Time `pg:"start_at"`
-	FinishTime     time.Time `pg:"finish_at"`
+	IsActive       bool      `pg:"isActive"`
+	StartTime      time.Time `pg:"startAt"`
+	FinishTime     time.Time `pg:"finishAt"`
 	Title          string    `pg:"title"`
 	Description    string    `pg:"description"`
 	Image          string    `pg:"image"`
-	Channel        int       `pg:"channel"`
-	TargetChannels []int     `pg:"target_channels"`
+	WinnersCount   int       `pg:"winnersCount"`
+	Channel        string    `pg:"channel"`
+	TargetChannels []string  `pg:"targetChannels"`
 }

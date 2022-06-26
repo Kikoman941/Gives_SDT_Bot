@@ -22,7 +22,7 @@ func GivesToButtons(gives []give.Give) []telebot.Btn {
 	return buttons
 }
 
-func StringToTime(str string, logger *logging.Logger) (time.Time, error) {
+func StringToTimeMSK(str string, logger *logging.Logger) (time.Time, error) {
 	location, _ := time.LoadLocation("Europe/Moscow")
 	t, err := time.ParseInLocation("02.01.2006 15:04", str, location)
 	if err != nil {

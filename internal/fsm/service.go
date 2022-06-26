@@ -26,7 +26,7 @@ func (s *Service) SetState(userId int, state string, data map[string]string) err
 }
 
 func (s *Service) GetState(userId int) (*UserState, error) {
-	usersStates, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("user_id=%d", userId))
+	usersStates, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"userId\"=%d", userId))
 	if err != nil {
 		s.logger.Errorf("cannot get userId=%d state: %s", userId, err)
 		return nil, err

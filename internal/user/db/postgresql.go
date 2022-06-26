@@ -14,7 +14,7 @@ type repository struct {
 
 func (r *repository) Create(ctx context.Context, user *user.User) error {
 	query := r.client.ModelContext(ctx, user)
-	_, err := query.OnConflict("(tg_id) DO NOTHING").Insert()
+	_, err := query.OnConflict("(\"tgId\") DO NOTHING").Insert()
 	if err != nil {
 		return err
 	}

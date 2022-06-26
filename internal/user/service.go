@@ -36,7 +36,7 @@ func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 }
 
 func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
-	users, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("tg_id='%d'", telegramId))
+	users, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"tgId\"='%d'", telegramId))
 	if err != nil {
 		s.logger.Errorf("cannot find user with tgId=%d: %s", telegramId, err)
 		return 0, err
@@ -48,7 +48,7 @@ func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
 func (s *Service) GetAdmins() ([]int64, error) {
 	var adminsIds []int64
 
-	admins, err := s.repository.FindAllWithConditions(context.TODO(), "is_admin=true")
+	admins, err := s.repository.FindAllWithConditions(context.TODO(), "\"isAdmin\"=true")
 	if err != nil {
 		s.logger.Error("cannot get admins")
 		return nil, err

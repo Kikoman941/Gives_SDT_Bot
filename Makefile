@@ -6,6 +6,9 @@ build:
 run: build
 	./.bin/app
 
+lint:
+	golangci-lint
+
 define ENV_EXAMPLE
 IS_PROD=False
 SUPERADMIN=0

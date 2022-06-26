@@ -14,7 +14,7 @@ type repository struct {
 
 func (r *repository) InsertOrUpdate(ctx context.Context, us *fsm.UserState) error {
 	query := r.client.ModelContext(ctx, us)
-	_, err := query.OnConflict("(user_id) DO UPDATE").
+	_, err := query.OnConflict("(\"userId\") DO UPDATE").
 		Insert()
 	if err != nil {
 		return err

@@ -12,6 +12,7 @@ type Config struct {
 	IsProd            bool
 	SuperAdmin        int
 	BotToken          string
+	BotUsername       string
 	BotPollingTimeout time.Duration
 	PostgreDSN        string
 }
@@ -35,6 +36,7 @@ func NewConfig() (*Config, error) {
 		IsProd:            os.Getenv("IS_PROD") == "True",
 		SuperAdmin:        superadmin,
 		BotToken:          os.Getenv("BOT_TOKEN"),
+		BotUsername:       os.Getenv("BOT_USERNAME"),
 		BotPollingTimeout: duration,
 		PostgreDSN:        os.Getenv("POSTGRESQL_DSN"),
 	}, nil

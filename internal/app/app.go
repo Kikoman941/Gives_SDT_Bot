@@ -13,7 +13,6 @@ import (
 	"Gives_SDT_Bot/internal/user"
 	userDB "Gives_SDT_Bot/internal/user/db"
 	"Gives_SDT_Bot/pkg/client/postgresql"
-	"Gives_SDT_Bot/pkg/errors"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 	"gopkg.in/telebot.v3"
@@ -27,13 +26,14 @@ type App struct {
 	adminPanel *adminPanel.AdminPanel
 }
 
-func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
+func NewApp(config *config.Config, logger *logging.Logger) *App {
 	ctx := context.TODO()
 
 	logger.Info("Initialization postgresql client")
 	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgreDSN)
 	if err != nil {
-		return nil, errors.FormatError("cannot get postgresql client", err)
+		logger.Fatalf("cannot get postgresql client: %s", err)
+		return nil
 	}
 
 	logger.Info("Creating telegram bot")
@@ -46,7 +46,8 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		},
 	)
 	if err != nil {
-		return nil, errors.FormatError("cannot create telegram bot", err)
+		logger.Fatalf("cannot create telegram bot: %s", err)
+		return nil
 	}
 
 	logger.Info("Initialization local image service")
@@ -64,12 +65,14 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 	logger.Info("Initialization publisher")
 	pub, err := publisher.NewPublisher(bot, logger)
 	if err != nil {
-		return nil, err
+		logger.Fatalf("cannot init publisher: %s", err)
+		return nil
 	}
 
 	logger.Info("Initialization admin panel")
 	ap := adminPanel.NewAdminPanel(
 		bot,
+		config.BotUsername,
 		config.SuperAdmin,
 		userService,
 		giveService,
@@ -84,7 +87,7 @@ func NewApp(config *config.Config, logger *logging.Logger) (*App, error) {
 		bot:        bot,
 		publisher:  pub,
 		adminPanel: ap,
-	}, nil
+	}
 }
 
 func (a *App) Run() {
