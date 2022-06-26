@@ -55,11 +55,13 @@ func (ad *AdminPanel) refreshAdmins(admins []int64) {
 func (ad *AdminPanel) checkBotIsAdmin(channelId int64) (bool, error) {
 	ch, err := ad.bot.ChatByID(channelId)
 	if err != nil {
+		ad.logger.Errorf("cannot get chat by channelId=%d: %s", channelId, err)
 		return false, err
 	}
 
 	channelAdmins, err := ad.bot.AdminsOf(ch)
 	if err != nil {
+		ad.logger.Errorf("cannot get admins of channelId=%d: %s", channelId, err)
 		return false, err
 	}
 

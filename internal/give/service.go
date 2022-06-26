@@ -18,15 +18,15 @@ func NewGiveService(repository Repository, logger *logging.Logger) *Service {
 	}
 }
 
-func (s *Service) CreateGive(giveTitle string, ownerId int) (int, error) {
+func (s *Service) CreateGive(channel string, ownerId int) (int, error) {
 	give := &Give{
 		IsActive: false,
 		Owner:    ownerId,
-		Title:    giveTitle,
+		Channel:  channel,
 	}
 
 	if err := s.repository.Create(context.TODO(), give); err != nil {
-		s.logger.Errorf("cannot create give with title %s: %s", giveTitle, err)
+		s.logger.Errorf("cannot create give with channel %s: %s", channel, err)
 	}
 
 	return give.Id, nil
@@ -36,9 +36,13 @@ func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
 	gives, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"owner\"=%d", userId))
 	if err != nil {
 		s.logger.Errorf("cannot get userId=%d gives: %s", userId, err)
+		return nil, err
+	} else if len(gives) == 0 {
+		s.logger.Errorf("not found gives for userId=%d", userId)
+		return nil, err
 	}
 
-	return gives, nil
+	return []Give{}, nil
 }
 
 func (s *Service) UpdateGive(giveId int, update string, params ...interface{}) error {
@@ -54,4 +58,16 @@ func (s *Service) UpdateGive(giveId int, update string, params ...interface{}) e
 	}
 
 	return nil
+}
+
+func (s *Service) GetGiveById(giveId int) (Give, error) {
+	gives, err := s.repository.FindAllWithConditions(context.TODO(), `"id"=?`, giveId)
+	if err != nil {
+		s.logger.Errorf("cannot get giveId=%d: %s", giveId, err)
+		return Give{}, err
+	} else if len(gives) == 0 {
+		s.logger.Errorf("not found give giveId=%d", giveId)
+	}
+
+	return gives[0], nil
 }

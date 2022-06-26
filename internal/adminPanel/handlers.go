@@ -79,11 +79,11 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_STATE, nil); err != nil {
+			if err := ad.fsmService.SetState(userId, data.ENTER_TARGET_CHANNEL_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
 			}
 
-			return ctx.Reply(data.ENTER_GIVE_TITLE_MESSAGE, data.CANCEL_MENU)
+			return ctx.Reply(data.ENTER_TARGET_CHANNEL_MESSAGE, data.CANCEL_MENU)
 		},
 		middleware.Whitelist(ad.adminGroup...),
 	)
@@ -130,12 +130,47 @@ func (ad *AdminPanel) InitHandlers() {
 
 			// Обслуживаем fsm
 			switch userState.State {
+			// Ввлд канала на котором будет проходить конкурс
+			case data.ENTER_TARGET_CHANNEL_STATE:
+				channelStr := ctx.Message().Text
+				channel, err := utils.StringToInt64(channelStr)
+				if err != nil {
+					ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channel, err)
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_MESSAGE, channel), data.CANCEL_MENU)
+				}
+
+				isAdmin, err := ad.checkBotIsAdmin(channel)
+				if err != nil {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_MESSAGE, channel), data.CANCEL_MENU)
+				} else if isAdmin == false {
+					return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_MESSAGE, channel), data.CANCEL_MENU)
+				}
+
+				giveId, err := ad.giveService.CreateGive(channelStr, userId)
+				if err != nil || giveId == 0 {
+					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				d := map[string]string{
+					"giveId": strconv.Itoa(giveId),
+				}
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_STATE, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_GIVE_TITLE_MESSAGE)
 			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_STATE:
 				giveTitle := ctx.Message().Text
-				giveId, err := ad.giveService.CreateGive(giveTitle, userId)
-				if err != nil || giveId == 0 {
-					return ctx.Reply(data.CANNOT_CREATE_GIVE_MESSAGE, data.CANCEL_MENU)
+
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
+				}
+
+				err = ad.giveService.UpdateGive(giveId, `"title"=?`, giveTitle)
+				if err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 
 				d := map[string]string{
@@ -172,7 +207,6 @@ func (ad *AdminPanel) InitHandlers() {
 				duration := strings.Split(ctx.Message().Text, " - ")
 				startAt, err := StringToTimeMSK(duration[0], ad.logger)
 				if err != nil || startAt.IsZero() {
-					fmt.Println(startAt)
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_MESSAGE, duration[0]), data.CANCEL_MENU)
 				}
 				fmt.Println(startAt)
@@ -245,12 +279,11 @@ func (ad *AdminPanel) InitHandlers() {
 					channelId, err := utils.StringToInt64(ch)
 					if err != nil {
 						ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channelId, err)
-						return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_SUBSCRIPTION_CHANNEL_MESSAGE, channelId), data.CANCEL_MENU)
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_MESSAGE, channelId), data.CANCEL_MENU)
 					}
 
 					isAdmin, err := ad.checkBotIsAdmin(channelId)
 					if err != nil {
-						ad.logger.Errorf("cannot check bot is admin in chatId=%d: %s", channelId, err)
 						return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_MESSAGE, channelId), data.CANCEL_MENU)
 					} else if isAdmin == false {
 						return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_MESSAGE, channelId), data.CANCEL_MENU)
@@ -266,7 +299,53 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply("sdfvsdfv")
+				give, err := ad.giveService.GetGiveById(giveId)
+				isActive := "Не активный"
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+				if give.IsActive {
+					isActive = "Активный"
+				}
+				img := &telebot.Photo{
+					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
+				}
+				img.Caption = fmt.Sprintf(
+					data.GIVE_CONTENT_MESSAGE,
+					give.Title,
+					give.Description,
+				)
+
+				_ = data.CreateReplyMenu(
+					data.ACTIVATE_GIVE_BUTTON,
+					data.EDIT_GIVE_BUTTON,
+				)
+
+				d := map[string]string{
+					"giveId": userState.Data["giveId"],
+				}
+				if err := ad.fsmService.SetState(userId, data.CHECK_AND_ACTIVATE_GIVE_STATE, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				_, err = ad.bot.Send(
+					ctx.Recipient(),
+					fmt.Sprintf(
+						data.CHECK_AND_ACTIVATE_GIVE_MESSAGE,
+						give.Channel,
+						give.TargetChannels,
+						give.StartAt,
+						give.FinishAt,
+						isActive,
+					),
+				)
+				if err != nil {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_MESSAGE, ctx.Recipient()))
+				}
+
+				return ctx.Reply(
+					img,
+				)
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_MESSAGE)
 			}
