@@ -27,7 +27,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return reply
 			}
 
-			if err := ad.fsmService.SetState(userID, data.MAIN_MENU_STATE, nil); err != nil {
+			if err := ad.fsmService.SetState(userID, data.START_MENU_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE)
 			}
 
@@ -61,7 +61,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.START_MENU)
 			}
 
-			if err := ad.fsmService.SetState(userId, data.MAIN_MENU_STATE, nil); err != nil {
+			if err := ad.fsmService.SetState(userId, data.START_MENU_STATE, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.START_MENU)
 			}
 
@@ -104,12 +104,86 @@ func (ad *AdminPanel) InitHandlers() {
 			if err != nil {
 				return ctx.Reply(data.CANNOT_GET_USER_GIVES_MESSAGE, data.START_MENU)
 			}
+			buttons := GivesToButtons(userGives)
+			buttons = append(buttons, data.BACK_TO_START_BUTTON)
 
-			givesMenu := data.CreateReplyMenu(
-				GivesToButtons(userGives)...,
-			)
+			givesMenu := data.CreateReplyMenu(buttons...)
 
 			return ctx.Reply(data.SELECT_OWN_GIVE_MESSAGE, givesMenu)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	// Кнопка "Опубликовать ✅" активирует конкурс
+	ad.bot.Handle(
+		&data.ACTIVATE_GIVE_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			giveId, err := strconv.Atoi(userState.Data["giveId"])
+			if err != nil {
+				return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
+			}
+
+			give, err := ad.giveService.GetGiveById(giveId)
+			if err != nil {
+				return ctx.Reply(data.CANNOT_GET_GIVE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			unfilledFields := ad.giveService.CheckFilling(&give)
+			if len(unfilledFields) != 0 {
+				return ctx.Reply(fmt.Sprintf(data.GIVE_FIELDS_MUST_BE_FILLED_MESSAGE, unfilledFields))
+			}
+
+			err = ad.giveService.UpdateGive(giveId, `"isActive"=?`, true)
+			if err != nil {
+				return ctx.Reply(data.CANNOT_UPDATE_GIVE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			if err := ad.fsmService.SetState(userId, data.START_MENU_STATE, nil); err != nil {
+				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			return ctx.Reply(data.GIVE_SUCCESSFULLY_ACTIVATE_MESSAGE, data.START_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	// Кнопка "Редактировать 🅿️" меню редактирования конкурса
+	ad.bot.Handle(
+		&data.EDIT_GIVE_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_MESSAGE, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			giveId, err := strconv.Atoi(userState.Data["giveId"])
+			if err != nil {
+				return ctx.Reply(data.CANNOT_GET_STATE_DATA_MESSAGE, data.CANCEL_MENU)
+			}
+
+			d := map[string]string{
+				"giveId": strconv.Itoa(giveId),
+			}
+			if err := ad.fsmService.SetState(userId, data.SELECT_PROPERTY_TO_EDIT_STATE, d); err != nil {
+				return ctx.Reply(data.CANNOT_SET_USER_STATE_MESSAGE, data.CANCEL_MENU)
+			}
+
+			return ctx.Reply(data.SELECT_PROPERTY_TO_EDIT_MESSAGE, data.EDIT_GIVE_MENU)
 		},
 		middleware.Whitelist(ad.adminGroup...),
 	)
@@ -130,7 +204,22 @@ func (ad *AdminPanel) InitHandlers() {
 
 			// Обслуживаем fsm
 			switch userState.State {
-			// Ввлд канала на котором будет проходить конкурс
+			// Меню конкурса
+			case data.SELECT_OWN_GIVE_STATE:
+				giveTitle := ctx.Message().Text
+
+				give, err := ad.giveService.GetGiveByTitle(giveTitle)
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_GIVE_MESSAGE, data.CANCEL_MENU)
+				}
+
+				if give.IsActive {
+					return ctx.Reply("Снять с публикации")
+				} else {
+					return ctx.Reply("Полное редактированиее")
+				}
+
+			// Ввод канала на котором будет проходить конкурс
 			case data.ENTER_TARGET_CHANNEL_STATE:
 				channelStr := ctx.Message().Text
 				channel, err := utils.StringToInt64(channelStr)
@@ -300,13 +389,15 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				give, err := ad.giveService.GetGiveById(giveId)
-				isActive := "Не активный"
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_GIVE_MESSAGE, data.CANCEL_MENU)
 				}
+
+				isActive := "Не активный"
 				if give.IsActive {
 					isActive = "Активный"
 				}
+
 				img := &telebot.Photo{
 					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 				}

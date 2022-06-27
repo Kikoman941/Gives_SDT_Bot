@@ -14,7 +14,8 @@ const (
 	ENTER_SUBSCRIPTION_CHANNELS_MESSAGE = "Введи id каналов на котовые нужно проверить подписку (один или несколько через пробел). Вы должны добавить в администраторы бота.\nЧтобы узнать id канала, перешлите любой пост из этого канала специальному боту @getmyid_bot, нижняя строка-ответ от бота и будет являться id Вашего канала."
 	CHECK_AND_ACTIVATE_GIVE_MESSAGE     = "Вот конкурс который получился. Проверь его и если все верно жми \"Опубликовать ✅\"\n\nКанал: %s\nПроверка подписки: %s\nСтарт: %s\nФиниш: %s\nСтатус: %s"
 	GIVE_CONTENT_MESSAGE                = "%s\n\n%s"
-	I_DONT_UNDERSTAND_MESSAGE           = "Я тебя не понимаю"
+	GIVE_SUCCESSFULLY_ACTIVATE_MESSAGE  = "Конкурс успешно активирован и будет опубликован в соответствии с параметрами"
+	SELECT_PROPERTY_TO_EDIT_MESSAGE     = "Что ты хочешь изменить?"
 
 	CANNOT_CREATE_USER_MESSAGE         = "Не могу создать пользователя. Обратитесь к разработчику"
 	CANNOT_FIND_USER_MESSAGE           = "Не могу найти пользователя в базе. Обратитесь к разработчику"
@@ -34,4 +35,6 @@ const (
 	FINISH_DATE_HAS_PASSED_MESSAGE     = "Дата окончания конкурса прошла"
 	FINISH_DATE_BEFORE_START_MESSAGE   = "Дата окончания конкурса раньше старта"
 	BOT_MUST_BE_ADMIN_MESSAGE          = "Бот долден быть админов в канале %d"
+	I_DONT_UNDERSTAND_MESSAGE          = "Я тебя не понимаю"
+	GIVE_FIELDS_MUST_BE_FILLED_MESSAGE = "Поля конкурса должны быть заполнены:\n%s"
 )

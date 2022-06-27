@@ -1,7 +1,7 @@
 package data
 
 const (
-	MAIN_MENU_STATE                   = "main_menu"
+	START_MENU_STATE                  = "main_menu"
 	SELECT_OWN_GIVE_STATE             = "select_own_give"
 	ENTER_TARGET_CHANNEL_STATE        = "enter_target_channel"
 	ENTER_GIVE_TITLE_STATE            = "enter_give_title"
@@ -11,4 +11,5 @@ const (
 	ENTER_WINNERS_COUNT_STATE         = "enter_winners_count"
 	ENTER_SUBSCRIPTION_CHANNELS_STATE = "enter_subscription_channels"
 	CHECK_AND_ACTIVATE_GIVE_STATE     = "check_and_activate_give"
+	SELECT_PROPERTY_TO_EDIT_STATE     = "select_property_to_edit"
 )

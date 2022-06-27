@@ -42,7 +42,7 @@ func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
 		return nil, err
 	}
 
-	return []Give{}, nil
+	return gives, nil
 }
 
 func (s *Service) UpdateGive(giveId int, update string, params ...interface{}) error {
@@ -70,4 +70,40 @@ func (s *Service) GetGiveById(giveId int) (Give, error) {
 	}
 
 	return gives[0], nil
+}
+
+func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
+	gives, err := s.repository.FindAllWithConditions(context.TODO(), `"title"=?`, giveTitle)
+	if err != nil {
+		s.logger.Errorf("cannot get giveTitle=%s: %s", giveTitle, err)
+		return Give{}, err
+	} else if len(gives) == 0 {
+		s.logger.Errorf("not found give giveTitle=%s", giveTitle)
+	}
+
+	return gives[0], nil
+}
+
+func (s *Service) CheckFilling(give *Give) []string {
+	var unfilledFields []string
+
+	if give.Title == "" || give.Title == " " {
+		unfilledFields = append(unfilledFields, "Заголовок")
+	} else if give.Description == "" || give.Description == " " {
+		unfilledFields = append(unfilledFields, "Описание")
+	} else if give.Image == "" {
+		unfilledFields = append(unfilledFields, "Картинка")
+	} else if give.StartAt.IsZero() {
+		unfilledFields = append(unfilledFields, "Время старта")
+	} else if give.FinishAt.IsZero() {
+		unfilledFields = append(unfilledFields, "Время финиша")
+	} else if give.WinnersCount == 0 {
+		unfilledFields = append(unfilledFields, "Колличество побежителей")
+	} else if give.Channel == "" || give.Channel == " " {
+		unfilledFields = append(unfilledFields, "Канал проведения")
+	} else if len(give.TargetChannels) == 0 {
+		unfilledFields = append(unfilledFields, "Каналы для подписки")
+	}
+
+	return unfilledFields
 }
