@@ -188,6 +188,75 @@ func (ad *AdminPanel) InitHandlers() {
 		middleware.Whitelist(ad.adminGroup...),
 	)
 
+	// Кнопка "Снять с публикации ⛔", выключает активный конкурс
+	ad.bot.Handle(
+		&data.DEACTIVATE_GIVE_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
+			}
+
+			giveId, err := strconv.Atoi(userState.Data["giveId"])
+			if err != nil {
+				return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
+			}
+
+			err = ad.giveService.UpdateGive(giveId, `"isActive"=?`, false)
+			if err != nil {
+				return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
+			}
+
+			if err := ad.fsmService.Setstate(userId, data.START_MENU_state, nil); err != nil {
+				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+			}
+
+			return ctx.Reply(data.GIVE_SUCCESSFULL_DEACTIVATE_message, data.START_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	// кнопка редактировани "Заголовок"
+	ad.bot.Handle(
+		&data.EDIT_TITLE_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
+			}
+
+			if userState.State == data.SELECT_PROPERTY_TO_EDIT_state {
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
+				}
+
+				d := map[string]string{
+					"giveId":      strconv.Itoa(giveId),
+					"work_status": data.WORK_STATUS_EDIT,
+				}
+
+				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_TITLE_state, d); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_GIVE_TITLE_message, data.CANCEL_MENU)
+			}
+			return ctx.Reply(data.I_DONT_UNDERSTAND_message, data.CANCEL_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
 	// Тригерится на любой текст
 	ad.bot.Handle(
 		telebot.OnText,
@@ -214,8 +283,8 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				d := map[string]string{
-					"giveId":      strconv.Itoa(give.Id),
-					"work_status": "edit",
+					"giveId":     strconv.Itoa(give.Id),
+					"workStatus": "edit",
 				}
 				if err := ad.fsmService.Setstate(userId, data.OWN_GIVE_MENU_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -305,14 +374,27 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				d := map[string]string{
-					"giveId": strconv.Itoa(giveId),
-				}
-				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_DESCRIPTION_state, d); err != nil {
-					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
-				}
+				if userState.Data["workStatus"] == data.WORK_STATUS_NEW {
+					d := map[string]string{
+						"giveId":     strconv.Itoa(giveId),
+						"workStatus": data.WORK_STATUS_NEW,
+					}
+					if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_DESCRIPTION_state, d); err != nil {
+						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+					}
 
-				return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_message)
+					return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_message)
+				} else {
+					d := map[string]string{
+						"giveId":     strconv.Itoa(giveId),
+						"workStatus": "edit",
+					}
+					if err := ad.fsmService.Setstate(userId, data.SELECT_PROPERTY_TO_EDIT_state, d); err != nil {
+						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+					}
+
+					return ctx.Reply(data.SELECT_PROPERTY_TO_EDIT_message, data.EDIT_GIVE_MENU)
+				}
 			// Ввод описания конкурса
 			case data.ENTER_GIVE_DESCRIPTION_state:
 				giveDesc := ctx.Message().Text

@@ -13,4 +13,7 @@ const (
 	ENTER_SUBSCRIPTION_CHANNELS_state = "enter_subscription_channels"
 	EDIT_GIVE_state                   = "check_and_activate_give"
 	SELECT_PROPERTY_TO_EDIT_state     = "select_property_to_edit"
+
+	WORK_STATUS_NEW  = "new"
+	WORK_STATUS_EDIT = "edit"
 )

@@ -15,6 +15,7 @@ const (
 	GIVE_OUTPUT_message                 = "Вот твой конкурс\n\nКанал: %s\nПроверка подписки: %s\nСтарт: %s\nФиниш: %s\nСтатус: %s"
 	GIVE_CONTENT_message                = "%s\n\n%s"
 	GIVE_SUCCESSFULLY_ACTIVATE_message  = "Конкурс успешно активирован и будет опубликован в соответствии с параметрами"
+	GIVE_SUCCESSFULL_DEACTIVATE_message = "Конкурс успешно снят с публикации. Теперь он не активен"
 	SELECT_PROPERTY_TO_EDIT_message     = "Что ты хочешь изменить?"
 
 	CANNOT_CREATE_USER_message         = "Не могу создать пользователя. Обратитесь к разработчику"

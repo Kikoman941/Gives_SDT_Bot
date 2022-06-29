@@ -6,6 +6,8 @@ func InitMenu() {
 	START_MENU.Reply(
 		[]telebot.Btn{
 			CREATE_GIVE_BUTTON,
+		},
+		[]telebot.Btn{
 			MY_GIVES_BUTTON,
 		},
 	)
@@ -19,7 +21,11 @@ func InitMenu() {
 	ACTIVATE_GIVE_MENU.Reply(
 		[]telebot.Btn{
 			ACTIVATE_GIVE_BUTTON,
+		},
+		[]telebot.Btn{
 			EDIT_GIVE_BUTTON,
+		},
+		[]telebot.Btn{
 			BACK_TO_START_BUTTON,
 		},
 	)
@@ -49,6 +55,8 @@ func InitMenu() {
 	ACTIVE_GIVE_MENU.Reply(
 		[]telebot.Btn{
 			DEACTIVATE_GIVE_BUTTON,
+		},
+		[]telebot.Btn{
 			BACK_TO_START_BUTTON,
 		},
 	)
