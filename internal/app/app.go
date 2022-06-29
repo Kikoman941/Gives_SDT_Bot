@@ -30,7 +30,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	ctx := context.TODO()
 
 	logger.Info("Initialization postgresql client")
-	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgreDSN)
+	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgresqlDSN)
 	if err != nil {
 		logger.Fatalf("cannot get postgresql client: %s", err)
 		return nil

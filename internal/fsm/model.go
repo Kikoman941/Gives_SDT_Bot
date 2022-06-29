@@ -1,8 +1,8 @@
 package fsm
 
-type Userstate struct {
+type UserState struct {
 	tableName struct{}          `pg:"public.users_states"`
 	UserID    int               `pg:"userId,fk,unique"`
-	state     string            `pg:"state"`
+	State     string            `pg:"state"`
 	Data      map[string]string `pg:"data"`
 }

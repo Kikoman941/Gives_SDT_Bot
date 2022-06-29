@@ -19,6 +19,6 @@ func main() {
 	}
 
 	logger.Info("Creating application")
-	app := app.NewApp(cfg, logger)
-	app.Run()
+	a := app.NewApp(cfg, logger)
+	a.Run()
 }

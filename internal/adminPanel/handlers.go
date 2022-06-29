@@ -123,12 +123,12 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			userstate, err := ad.fsmService.Getstate(userId)
-			if err != nil || userstate == nil {
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
-			giveId, err := strconv.Atoi(userstate.Data["giveId"])
+			giveId, err := strconv.Atoi(userState.Data["giveId"])
 			if err != nil {
 				return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 			}
@@ -166,12 +166,12 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			userstate, err := ad.fsmService.Getstate(userId)
-			if err != nil || userstate == nil {
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
-			giveId, err := strconv.Atoi(userstate.Data["giveId"])
+			giveId, err := strconv.Atoi(userState.Data["giveId"])
 			if err != nil {
 				return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 			}
@@ -197,16 +197,16 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			userstate, err := ad.fsmService.Getstate(userId)
-			if err != nil || userstate == nil {
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
 			// Обслуживаем fsm
-			switch userstate.state {
+			switch userState.State {
 			// Меню конкурса
 			case data.SELECT_OWN_GIVE_state:
-				giveTitle := ctx.message().Text
+				giveTitle := ctx.Message().Text
 
 				give, err := ad.giveService.GetGiveByTitle(giveTitle)
 				if err != nil {
@@ -264,7 +264,7 @@ func (ad *AdminPanel) InitHandlers() {
 
 			// Ввод канала на котором будет проходить конкурс
 			case data.ENTER_TARGET_CHANNEL_state:
-				channelStr := ctx.message().Text
+				channelStr := ctx.Message().Text
 				channel, err := utils.StringToInt64(channelStr)
 				if err != nil {
 					ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channel, err)
@@ -293,9 +293,9 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.ENTER_GIVE_TITLE_message)
 			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_state:
-				giveTitle := ctx.message().Text
+				giveTitle := ctx.Message().Text
 
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 				}
@@ -315,8 +315,8 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_message)
 			// Ввод описания конкурса
 			case data.ENTER_GIVE_DESCRIPTION_state:
-				giveDesc := ctx.message().Text
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveDesc := ctx.Message().Text
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 				}
@@ -327,7 +327,7 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				d := map[string]string{
-					"giveId": userstate.Data["giveId"],
+					"giveId": userState.Data["giveId"],
 				}
 				if err := ad.fsmService.Setstate(userId, data.UPLOAD_GIVE_IMAGE_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -336,7 +336,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.UPLOAD_GIVE_IMAGE_message)
 			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_state:
-				duration := strings.Split(ctx.message().Text, " - ")
+				duration := strings.Split(ctx.Message().Text, " - ")
 				startAt, err := StringToTimeMSK(duration[0], ad.logger)
 				if err != nil || startAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_message, duration[0]), data.CANCEL_MENU)
@@ -354,7 +354,7 @@ func (ad *AdminPanel) InitHandlers() {
 					return ctx.Reply(data.FINISH_DATE_BEFORE_START_message)
 				}
 
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				err = ad.giveService.UpdateGive(
 					giveId,
 					`"startAt"=?`,
@@ -373,7 +373,7 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				d := map[string]string{
-					"giveId": userstate.Data["giveId"],
+					"giveId": userState.Data["giveId"],
 				}
 				if err := ad.fsmService.Setstate(userId, data.ENTER_WINNERS_COUNT_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -382,12 +382,12 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.ENTER_WINNERS_COUNT_message)
 			// Ввод колличества победителей конкурса
 			case data.ENTER_WINNERS_COUNT_state:
-				winnersCount, err := strconv.Atoi(ctx.message().Text)
+				winnersCount, err := strconv.Atoi(ctx.Message().Text)
 				if err != nil || winnersCount <= 0 {
 					return ctx.Reply(data.CANNOT_PARSE_WINNERS_COUNT_message, data.CANCEL_MENU)
 				}
 
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 				}
@@ -397,7 +397,7 @@ func (ad *AdminPanel) InitHandlers() {
 				}
 
 				d := map[string]string{
-					"giveId": userstate.Data["giveId"],
+					"giveId": userState.Data["giveId"],
 				}
 				if err := ad.fsmService.Setstate(userId, data.ENTER_SUBSCRIPTION_CHANNELS_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -406,7 +406,7 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.ENTER_SUBSCRIPTION_CHANNELS_message)
 			// Ввод каналов для проверки подписки
 			case data.ENTER_SUBSCRIPTION_CHANNELS_state:
-				channels := strings.Split(ctx.message().Text, " ")
+				channels := strings.Split(ctx.Message().Text, " ")
 				for _, ch := range channels {
 					channelId, err := utils.StringToInt64(ch)
 					if err != nil {
@@ -422,7 +422,7 @@ func (ad *AdminPanel) InitHandlers() {
 					}
 				}
 
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_state_DATA_message, data.CANCEL_MENU)
 				}
@@ -451,7 +451,7 @@ func (ad *AdminPanel) InitHandlers() {
 				)
 
 				d := map[string]string{
-					"giveId": userstate.Data["giveId"],
+					"giveId": userState.Data["giveId"],
 				}
 				if err := ad.fsmService.Setstate(userId, data.EDIT_GIVE_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -492,28 +492,28 @@ func (ad *AdminPanel) InitHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			userstate, err := ad.fsmService.Getstate(userId)
-			if err != nil || userstate == nil {
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
 			// Обслуживаем fsm
 			// Загрузка обложки конкурса
-			if userstate.state == data.UPLOAD_GIVE_IMAGE_state {
-				img := ctx.message().Photo.File
-				filename, err := ad.imagesService.SaveFile(&img, userstate.Data["giveId"])
+			if userState.State == data.UPLOAD_GIVE_IMAGE_state {
+				img := ctx.Message().Photo.File
+				filename, err := ad.imagesService.SaveFile(&img, userState.Data["giveId"])
 				if err != nil || filename == "" {
 					return ctx.Reply(data.CANNOT_DOWNLOAD_IMAGE_message, data.CANCEL_MENU)
 				}
 
-				giveId, err := strconv.Atoi(userstate.Data["giveId"])
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf(`"image"='%s'`, filename))
 				if err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
 				d := map[string]string{
-					"giveId": userstate.Data["giveId"],
+					"giveId": userState.Data["giveId"],
 				}
 				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_START_FINISH_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)

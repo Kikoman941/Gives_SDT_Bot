@@ -22,8 +22,3 @@ func CreateReplyMenu(buttons ...telebot.Btn) *telebot.ReplyMarkup {
 
 	return menu
 }
-
-func CreateInlineMenu() *telebot.ReplyMarkup {
-	menu := &telebot.ReplyMarkup{}
-	return menu
-}

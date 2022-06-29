@@ -14,7 +14,7 @@ type Config struct {
 	BotToken          string
 	BotUsername       string
 	BotPollingTimeout time.Duration
-	PostgreDSN        string
+	PostgresqlDSN     string
 }
 
 func NewConfig() (*Config, error) {
@@ -22,7 +22,7 @@ func NewConfig() (*Config, error) {
 		return nil, errors.New("cannot load env")
 	}
 
-	superadmin, err := strconv.Atoi(os.Getenv("SUPERADMIN"))
+	superAdmin, err := strconv.Atoi(os.Getenv("SUPERADMIN"))
 	if err != nil {
 		return nil, errors.New("cannot parse superadmin id")
 	}
@@ -34,10 +34,10 @@ func NewConfig() (*Config, error) {
 
 	return &Config{
 		IsProd:            os.Getenv("IS_PROD") == "True",
-		SuperAdmin:        superadmin,
+		SuperAdmin:        superAdmin,
 		BotToken:          os.Getenv("BOT_TOKEN"),
 		BotUsername:       os.Getenv("BOT_USERNAME"),
 		BotPollingTimeout: duration,
-		PostgreDSN:        os.Getenv("POSTGRESQL_DSN"),
+		PostgresqlDSN:     os.Getenv("POSTGRESQL_DSN"),
 	}, nil
 }

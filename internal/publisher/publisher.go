@@ -22,7 +22,7 @@ func NewPublisher(bot *telebot.Bot, logger *logging.Logger) (*Publisher, error) 
 func (p *Publisher) Run() {
 	go func() {
 		for {
-			fmt.Println("test publisger")
+			fmt.Println("test publisher")
 			time.Sleep(time.Second * 5)
 		}
 	}()

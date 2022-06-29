@@ -12,7 +12,7 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) InsertOrUpdate(ctx context.Context, us *fsm.Userstate) error {
+func (r *repository) InsertOrUpdate(ctx context.Context, us *fsm.UserState) error {
 	query := r.client.ModelContext(ctx, us)
 	_, err := query.OnConflict("(\"userId\") DO UPDATE").
 		Insert()
@@ -22,8 +22,8 @@ func (r *repository) InsertOrUpdate(ctx context.Context, us *fsm.Userstate) erro
 	return nil
 }
 
-func (r *repository) FindAllWithConditions(ctx context.Context, conditions string) ([]fsm.Userstate, error) {
-	var states []fsm.Userstate
+func (r *repository) FindAllWithConditions(ctx context.Context, conditions string) ([]fsm.UserState, error) {
+	var states []fsm.UserState
 
 	err := r.client.ModelContext(ctx, &states).
 		Where(conditions).
