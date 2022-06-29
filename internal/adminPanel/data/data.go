@@ -16,6 +16,14 @@ func InitMenu() {
 		},
 	)
 
+	ACTIVATE_GIVE_MENU.Reply(
+		[]telebot.Btn{
+			ACTIVATE_GIVE_BUTTON,
+			EDIT_GIVE_BUTTON,
+			BACK_TO_START_BUTTON,
+		},
+	)
+
 	EDIT_GIVE_MENU.Reply(
 		[]telebot.Btn{
 			EDIT_TITLE_BUTTON,
@@ -32,6 +40,16 @@ func InitMenu() {
 		[]telebot.Btn{
 			EDIT_CHANNEL_BUTTON,
 			EDIT_TARGET_CHANNELS_BUTTON,
+		},
+		[]telebot.Btn{
+			BACK_TO_START_BUTTON,
+		},
+	)
+
+	ACTIVE_GIVE_MENU.Reply(
+		[]telebot.Btn{
+			DEACTIVATE_GIVE_BUTTON,
+			BACK_TO_START_BUTTON,
 		},
 	)
 }

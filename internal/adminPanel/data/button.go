@@ -7,13 +7,14 @@ var (
 	MY_GIVES_BUTTON             = telebot.Btn{Text: "Мои конкурсы 📋"}
 	BACK_TO_START_BUTTON        = telebot.Btn{Text: "Назад в главное меню 🔙"}
 	ACTIVATE_GIVE_BUTTON        = telebot.Btn{Text: "Опубликовать ✅"}
+	DEACTIVATE_GIVE_BUTTON      = telebot.Btn{Text: "Снять с публикации ⛔"}
 	EDIT_GIVE_BUTTON            = telebot.Btn{Text: "Редактировать 🅿️"}
 	EDIT_TITLE_BUTTON           = telebot.Btn{Text: "Заголовок"}
-	EDIT_DESCRIPTION_BUTTON     = telebot.Btn{Text: ""}
-	EDIT_START_BUTTON           = telebot.Btn{Text: ""}
-	EDIT_FINISH_BUTTON          = telebot.Btn{Text: ""}
-	EDIT_IMAGE_BUTTON           = telebot.Btn{Text: ""}
-	EDIT_WINNERS_COUNT_BUTTON   = telebot.Btn{Text: ""}
-	EDIT_CHANNEL_BUTTON         = telebot.Btn{Text: ""}
-	EDIT_TARGET_CHANNELS_BUTTON = telebot.Btn{Text: ""}
+	EDIT_DESCRIPTION_BUTTON     = telebot.Btn{Text: "Описание"}
+	EDIT_START_BUTTON           = telebot.Btn{Text: "Дата старта"}
+	EDIT_FINISH_BUTTON          = telebot.Btn{Text: "Дата финиша"}
+	EDIT_IMAGE_BUTTON           = telebot.Btn{Text: "Картинка"}
+	EDIT_WINNERS_COUNT_BUTTON   = telebot.Btn{Text: "Колличество победителей"}
+	EDIT_CHANNEL_BUTTON         = telebot.Btn{Text: "Канал конкурса"}
+	EDIT_TARGET_CHANNELS_BUTTON = telebot.Btn{Text: "Каналы проверки подписки"}
 )

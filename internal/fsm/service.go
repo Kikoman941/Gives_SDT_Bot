@@ -11,13 +11,13 @@ type Service struct {
 	logger     *logging.Logger
 }
 
-func (s *Service) SetState(userId int, state string, data map[string]string) error {
-	userState := &UserState{
+func (s *Service) Setstate(userId int, state string, data map[string]string) error {
+	userstate := &Userstate{
 		UserID: userId,
-		State:  state,
+		state:  state,
 		Data:   data,
 	}
-	err := s.repository.InsertOrUpdate(context.TODO(), userState)
+	err := s.repository.InsertOrUpdate(context.TODO(), userstate)
 	if err != nil {
 		s.logger.Errorf("cannot set (state=%s data=%s) for user with tgId=%d: %s", state, data, userId, err)
 		return err
@@ -25,14 +25,14 @@ func (s *Service) SetState(userId int, state string, data map[string]string) err
 	return nil
 }
 
-func (s *Service) GetState(userId int) (*UserState, error) {
-	usersStates, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"userId\"=%d", userId))
+func (s *Service) Getstate(userId int) (*Userstate, error) {
+	usersstates, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"userId\"=%d", userId))
 	if err != nil {
 		s.logger.Errorf("cannot get userId=%d state: %s", userId, err)
 		return nil, err
 	}
 
-	return &usersStates[0], nil
+	return &usersstates[0], nil
 }
 
 func NewFSMService(repository Repository, logger *logging.Logger) *Service {
