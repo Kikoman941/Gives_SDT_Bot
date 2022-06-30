@@ -11,7 +11,7 @@ type Service struct {
 	logger     *logging.Logger
 }
 
-func (s *Service) Setstate(userId int, state string, data map[string]string) error {
+func (s *Service) SetState(userId int, state string, data map[string]string) error {
 	userState := &UserState{
 		UserID: userId,
 		State:  state,

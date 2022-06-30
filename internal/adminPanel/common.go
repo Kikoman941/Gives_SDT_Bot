@@ -3,8 +3,10 @@ package adminPanel
 import (
 	"Gives_SDT_Bot/internal/give"
 	"Gives_SDT_Bot/pkg/logging"
+	"fmt"
 	"gopkg.in/telebot.v3"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,4 +33,12 @@ func StringToTimeMSK(str string, logger *logging.Logger) (time.Time, error) {
 	}
 
 	return t, nil
+}
+
+func ClearTextForMarkdownV2(text string) string {
+	badCharacters := []string{"<", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+	for _, ch := range badCharacters {
+		text = strings.ReplaceAll(text, ch, fmt.Sprintf("\\%s", ch))
+	}
+	return text
 }

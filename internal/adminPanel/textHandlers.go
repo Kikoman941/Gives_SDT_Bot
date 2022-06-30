@@ -42,7 +42,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					"giveId":     strconv.Itoa(give.Id),
 					"workStatus": data.WORK_STATUS_EDIT,
 				}
-				if err := ad.fsmService.Setstate(userId, data.OWN_GIVE_MENU_state, d); err != nil {
+				if err := ad.fsmService.SetState(userId, data.OWN_GIVE_MENU_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -54,14 +54,16 @@ func (ad *AdminPanel) InitTextHandlers() {
 				img := &telebot.Photo{
 					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 				}
-				img.Caption = fmt.Sprintf(
-					data.GIVE_CONTENT_message,
-					give.Title,
-					give.Description,
+
+				img.Caption = ClearTextForMarkdownV2(
+					fmt.Sprintf(
+						data.GIVE_CONTENT_message,
+						give.Title,
+						give.Description,
+					),
 				)
 
-				_, err = ad.bot.Send(
-					ctx.Recipient(),
+				text := ClearTextForMarkdownV2(
 					fmt.Sprintf(
 						data.GIVE_OUTPUT_message,
 						give.Channel,
@@ -71,19 +73,26 @@ func (ad *AdminPanel) InitTextHandlers() {
 						isActive,
 					),
 				)
+				_, err = ad.bot.Send(
+					ctx.Recipient(),
+					text,
+					telebot.ModeMarkdownV2,
+				)
 				if err != nil {
-					return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, ctx.Recipient()))
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, err))
 				}
 
 				if give.IsActive {
 					return ctx.Reply(
 						img,
 						data.ACTIVE_GIVE_MENU,
+						telebot.ModeMarkdownV2,
 					)
 				} else {
 					return ctx.Reply(
 						img,
 						data.ACTIVATE_GIVE_MENU,
+						telebot.ModeMarkdownV2,
 					)
 				}
 
@@ -133,7 +142,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -166,7 +175,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -198,7 +207,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -255,7 +264,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -290,7 +299,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
@@ -340,21 +349,22 @@ func (ad *AdminPanel) InitTextHandlers() {
 					img := &telebot.Photo{
 						File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 					}
-					img.Caption = fmt.Sprintf(
-						data.GIVE_CONTENT_message,
-						give.Title,
-						give.Description,
+					img.Caption = ClearTextForMarkdownV2(
+						fmt.Sprintf(
+							data.GIVE_CONTENT_message,
+							give.Title,
+							give.Description,
+						),
 					)
 
 					d := map[string]string{
 						"giveId": userState.Data["giveId"],
 					}
-					if err := ad.fsmService.Setstate(userId, data.EDIT_GIVE_state, d); err != nil {
+					if err := ad.fsmService.SetState(userId, data.EDIT_GIVE_state, d); err != nil {
 						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 					}
 
-					_, err = ad.bot.Send(
-						ctx.Recipient(),
+					text := ClearTextForMarkdownV2(
 						fmt.Sprintf(
 							data.GIVE_OUTPUT_message,
 							give.Channel,
@@ -364,13 +374,20 @@ func (ad *AdminPanel) InitTextHandlers() {
 							isActive,
 						),
 					)
+					_, err = ad.bot.Send(
+						ctx.Recipient(),
+						text,
+						telebot.ModeMarkdownV2,
+					)
 					if err != nil {
-						return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, ctx.Recipient()))
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, err))
 					}
 
 					return ctx.Reply(
 						img,
-						data.ACTIVATE_GIVE_MENU,
+						&telebot.SendOptions{
+							ReplyMarkup: data.ACTIVATE_GIVE_MENU,
+						},
 					)
 				} else if workStatus == data.WORK_STATUS_EDIT {
 					state = data.SELECT_PROPERTY_TO_EDIT_state
@@ -378,7 +395,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					menu = data.EDIT_GIVE_MENU
 				}
 
-				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 

@@ -22,7 +22,7 @@ func (ad *AdminPanel) InitCommandHandlers() {
 				return reply
 			}
 
-			if err := ad.fsmService.Setstate(userID, data.START_MENU_state, nil); err != nil {
+			if err := ad.fsmService.SetState(userID, data.START_MENU_state, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message)
 			}
 

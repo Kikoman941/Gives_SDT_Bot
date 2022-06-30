@@ -18,7 +18,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.START_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.START_MENU_state, nil); err != nil {
+			if err := ad.fsmService.SetState(userId, data.START_MENU_state, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.START_MENU)
 			}
 
@@ -39,7 +39,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			d := map[string]string{
 				"workStatus": data.WORK_STATUS_NEW,
 			}
-			if err := ad.fsmService.Setstate(userId, data.ENTER_TARGET_CHANNEL_state, d); err != nil {
+			if err := ad.fsmService.SetState(userId, data.ENTER_TARGET_CHANNEL_state, d); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -56,10 +56,6 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.SELECT_OWN_GIVE_state, nil); err != nil {
-				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
-			}
-
 			userGives, err := ad.giveService.GetAllUserGives(userId)
 
 			if err != nil {
@@ -72,6 +68,10 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			buttons = append(buttons, data.BACK_TO_START_BUTTON)
 
 			givesMenu := data.CreateReplyMenu(buttons...)
+
+			if err := ad.fsmService.SetState(userId, data.SELECT_OWN_GIVE_state, nil); err != nil {
+				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+			}
 
 			return ctx.Reply(data.SELECT_OWN_GIVE_message, givesMenu)
 		},
@@ -112,7 +112,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.START_MENU_state, nil); err != nil {
+			if err := ad.fsmService.SetState(userId, data.START_MENU_state, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -135,7 +135,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.SELECT_PROPERTY_TO_EDIT_state, userState.Data); err != nil {
+			if err := ad.fsmService.SetState(userId, data.SELECT_PROPERTY_TO_EDIT_state, userState.Data); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -168,7 +168,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.START_MENU_state, nil); err != nil {
+			if err := ad.fsmService.SetState(userId, data.START_MENU_state, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -192,11 +192,37 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			}
 
 			if userState.State == data.SELECT_PROPERTY_TO_EDIT_state {
-				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_TITLE_state, userState.Data); err != nil {
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
 				return ctx.Reply(data.ENTER_GIVE_TITLE_message, data.CANCEL_MENU)
+			}
+			return ctx.Reply(data.I_DONT_UNDERSTAND_message, data.CANCEL_MENU)
+		},
+		middleware.Whitelist(ad.adminGroup...),
+	)
+
+	// Кнопка редактировани "Описание"
+	ad.bot.Handle(
+		&data.EDIT_DESCRIPTION_BUTTON,
+		func(ctx telebot.Context) error {
+			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
+			if err != nil || userId == 0 {
+				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
+			}
+
+			userState, err := ad.fsmService.GetState(userId)
+			if err != nil || userState == nil {
+				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
+			}
+
+			if userState.State == data.SELECT_PROPERTY_TO_EDIT_state {
+				if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_DESCRIPTION_state, userState.Data); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_message, data.CANCEL_MENU)
 			}
 			return ctx.Reply(data.I_DONT_UNDERSTAND_message, data.CANCEL_MENU)
 		},

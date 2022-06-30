@@ -37,14 +37,25 @@ func (ad *AdminPanel) InitPhotoHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				d := map[string]string{
-					"giveId": userState.Data["giveId"],
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					state = data.ENTER_GIVE_START_FINISH_state
+					replyMessage = data.ENTER_GIVE_START_FINISH_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
-				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_START_FINISH_state, d); err != nil {
+
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(data.ENTER_GIVE_START_FINISH_message)
+				return ctx.Reply(replyMessage, menu)
 			}
 
 			return ctx.Reply(data.I_DONT_UNDERSTAND_message)
