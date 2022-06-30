@@ -48,8 +48,15 @@ func NewAdminPanel(
 	}
 }
 
-func (ad *AdminPanel) refreshAdmins(admins []int64) {
+func (ad *AdminPanel) RefreshAdmins() error {
+	admins, err := ad.userService.GetAdmins()
+	if err != nil {
+		return err
+	} else if len(admins) == 0 {
+		return data.ERROR_NO_ADMINS_FOR_REFRESH
+	}
 	ad.adminGroup = admins
+	return nil
 }
 
 func (ad *AdminPanel) checkBotIsAdmin(channelId int64) (bool, error) {

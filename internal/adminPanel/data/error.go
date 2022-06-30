@@ -4,4 +4,5 @@ import "errors"
 
 var (
 	ERROR_USER_NOT_FOUND_IN_CHANNEL = errors.New("telegram: Bad Request: user not found (400)")
+	ERROR_NO_ADMINS_FOR_REFRESH     = errors.New("no admins for refresh")
 )

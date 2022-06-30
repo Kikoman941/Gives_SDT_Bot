@@ -18,11 +18,12 @@ const (
 	GIVE_SUCCESSFULL_DEACTIVATE_message = "Конкурс успешно снят с публикации. Теперь он не активен"
 	SELECT_PROPERTY_TO_EDIT_message     = "Что ты хочешь изменить?"
 
+	CANNOT_GET_ADMINS_message          = "Не могу получить список админов. Обратитесь к разработчику"
 	CANNOT_CREATE_USER_message         = "Не могу создать пользователя. Обратитесь к разработчику"
 	CANNOT_FIND_USER_message           = "Не могу найти пользователя в базе. Обратитесь к разработчику"
 	CANNOT_SET_USER_state_message      = "Не могу установить состояние пользователя. Обратитесь к разработчику"
 	CANNOT_GET_USER_state_message      = "Не могу получить состояние пользователя. Обратитесь к разработчику"
-	CANNOT_GET_state_DATA_message      = "He могу получить данные из состояния. Обратитесь к разработчику"
+	CANNOT_GET_STATE_DATA_message      = "He могу получить данные из состояния. Обратитесь к разработчику"
 	CANNOT_GET_USER_GIVES_message      = "Не могу получить конкурсы пользователя. Обратитесь к разработчику"
 	CANNOT_CREATE_GIVE_message         = "Не могу создать конкурс. Обратитесь к разработчику"
 	CANNOT_UPDATE_GIVE_message         = "Не могу обновить конкурс. Обратитесь к разработчику"

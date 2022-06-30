@@ -20,5 +20,8 @@ func main() {
 
 	logger.Info("Creating application")
 	a := app.NewApp(cfg, logger)
-	a.Run()
+
+	if err := a.Run(); err != nil {
+		logger.Fatal(err)
+	}
 }

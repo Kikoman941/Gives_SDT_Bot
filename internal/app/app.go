@@ -2,6 +2,7 @@ package app
 
 import (
 	"Gives_SDT_Bot/internal/adminPanel"
+	"Gives_SDT_Bot/internal/adminPanel/data"
 	"Gives_SDT_Bot/internal/config"
 	"Gives_SDT_Bot/internal/fsm"
 	fsmDB "Gives_SDT_Bot/internal/fsm/db"
@@ -15,6 +16,7 @@ import (
 	"Gives_SDT_Bot/pkg/client/postgresql"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
+	"errors"
 	"gopkg.in/telebot.v3"
 )
 
@@ -90,9 +92,22 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	}
 }
 
-func (a *App) Run() {
-	a.adminPanel.InitHandlers()
+func (a *App) Run() error {
+	if err := a.adminPanel.RefreshAdmins(); err != nil {
+		if !errors.Is(err, data.ERROR_NO_ADMINS_FOR_REFRESH) {
+			return err
+		}
+	}
+
+	a.adminPanel.InitCommandHandlers()
+	a.adminPanel.InitButtonHandlers()
+	a.adminPanel.InitTextHandlers()
+	a.adminPanel.InitPhotoHandlers()
+
 	a.publisher.Run()
+
 	a.bot.Start()
+
 	a.logger.Info("App successfully started")
+	return nil
 }
