@@ -36,7 +36,10 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)
 			}
 
-			if err := ad.fsmService.Setstate(userId, data.ENTER_TARGET_CHANNEL_state, nil); err != nil {
+			d := map[string]string{
+				"workStatus": data.WORK_STATUS_NEW,
+			}
+			if err := ad.fsmService.Setstate(userId, data.ENTER_TARGET_CHANNEL_state, d); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -58,9 +61,13 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			}
 
 			userGives, err := ad.giveService.GetAllUserGives(userId)
+
 			if err != nil {
 				return ctx.Reply(data.CANNOT_GET_USER_GIVES_message, data.START_MENU)
+			} else if len(userGives) == 0 {
+				return ctx.Reply(data.NO_GIVES_message, data.START_MENU)
 			}
+
 			buttons := GivesToButtons(userGives)
 			buttons = append(buttons, data.BACK_TO_START_BUTTON)
 
@@ -128,15 +135,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_GET_USER_state_message, data.CANCEL_MENU)
 			}
 
-			giveId, err := strconv.Atoi(userState.Data["giveId"])
-			if err != nil {
-				return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
-			}
-
-			d := map[string]string{
-				"giveId": strconv.Itoa(giveId),
-			}
-			if err := ad.fsmService.Setstate(userId, data.SELECT_PROPERTY_TO_EDIT_state, d); err != nil {
+			if err := ad.fsmService.Setstate(userId, data.SELECT_PROPERTY_TO_EDIT_state, userState.Data); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
@@ -193,17 +192,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			}
 
 			if userState.State == data.SELECT_PROPERTY_TO_EDIT_state {
-				giveId, err := strconv.Atoi(userState.Data["giveId"])
-				if err != nil {
-					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
-				}
-
-				d := map[string]string{
-					"giveId":      strconv.Itoa(giveId),
-					"work_status": data.WORK_STATUS_EDIT,
-				}
-
-				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_TITLE_state, d); err != nil {
+				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_TITLE_state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 

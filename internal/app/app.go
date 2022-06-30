@@ -108,6 +108,5 @@ func (a *App) Run() error {
 
 	a.bot.Start()
 
-	a.logger.Info("App successfully started")
 	return nil
 }

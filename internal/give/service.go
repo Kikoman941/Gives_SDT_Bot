@@ -38,7 +38,7 @@ func (s *Service) GetAllUserGives(userId int) ([]Give, error) {
 		s.logger.Errorf("cannot get userId=%d gives: %s", userId, err)
 		return nil, err
 	} else if len(gives) == 0 {
-		s.logger.Errorf("not found gives for userId=%d", userId)
+		s.logger.Warningf("not found gives for userId=%d", userId)
 		return nil, err
 	}
 

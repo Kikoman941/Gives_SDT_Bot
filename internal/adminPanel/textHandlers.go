@@ -40,7 +40,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 
 				d := map[string]string{
 					"giveId":     strconv.Itoa(give.Id),
-					"workStatus": "edit",
+					"workStatus": data.WORK_STATUS_EDIT,
 				}
 				if err := ad.fsmService.Setstate(userId, data.OWN_GIVE_MENU_state, d); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
@@ -103,19 +103,41 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_message, channel), data.CANCEL_MENU)
 				}
 
-				giveId, err := ad.giveService.CreateGive(channelStr, userId)
-				if err != nil || giveId == 0 {
-					return ctx.Reply(data.CANNOT_CREATE_GIVE_message, data.CANCEL_MENU)
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					giveId, err := ad.giveService.CreateGive(channelStr, userId)
+					if err != nil || giveId == 0 {
+						return ctx.Reply(data.CANNOT_CREATE_GIVE_message, data.CANCEL_MENU)
+					}
+
+					userState.Data["giveId"] = strconv.Itoa(giveId)
+					state = data.ENTER_GIVE_TITLE_state
+					replyMessage = data.ENTER_GIVE_TITLE_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					giveId, err := strconv.Atoi(userState.Data["giveId"])
+					if err != nil {
+						return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
+					}
+					err = ad.giveService.UpdateGive(giveId, `"channel"=?`, channelStr)
+					if err != nil {
+						return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
+					}
+
+					userState.Data["giveId"] = strconv.Itoa(giveId)
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
 
-				d := map[string]string{
-					"giveId": strconv.Itoa(giveId),
-				}
-				if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_TITLE_state, d); err != nil {
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(data.ENTER_GIVE_TITLE_message)
+				return ctx.Reply(replyMessage, menu)
 			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_state:
 				giveTitle := ctx.Message().Text
@@ -130,27 +152,25 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				if userState.Data["workStatus"] == data.WORK_STATUS_NEW {
-					d := map[string]string{
-						"giveId":     strconv.Itoa(giveId),
-						"workStatus": data.WORK_STATUS_NEW,
-					}
-					if err := ad.fsmService.Setstate(userId, data.ENTER_GIVE_DESCRIPTION_state, d); err != nil {
-						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
-					}
-
-					return ctx.Reply(data.ENTER_GIVE_DESCRIPTION_message)
-				} else {
-					d := map[string]string{
-						"giveId":     strconv.Itoa(giveId),
-						"workStatus": "edit",
-					}
-					if err := ad.fsmService.Setstate(userId, data.SELECT_PROPERTY_TO_EDIT_state, d); err != nil {
-						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
-					}
-
-					return ctx.Reply(data.SELECT_PROPERTY_TO_EDIT_message, data.EDIT_GIVE_MENU)
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					state = data.ENTER_GIVE_DESCRIPTION_state
+					replyMessage = data.ENTER_GIVE_DESCRIPTION_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
+
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+				}
+
+				return ctx.Reply(replyMessage, menu)
 			// Ввод описания конкурса
 			case data.ENTER_GIVE_DESCRIPTION_state:
 				giveDesc := ctx.Message().Text
@@ -164,14 +184,25 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				d := map[string]string{
-					"giveId": userState.Data["giveId"],
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					state = data.UPLOAD_GIVE_IMAGE_state
+					replyMessage = data.UPLOAD_GIVE_IMAGE_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
-				if err := ad.fsmService.Setstate(userId, data.UPLOAD_GIVE_IMAGE_state, d); err != nil {
+
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(data.UPLOAD_GIVE_IMAGE_message)
+				return ctx.Reply(replyMessage, menu)
 			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_state:
 				duration := strings.Split(ctx.Message().Text, " - ")
@@ -210,14 +241,25 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				d := map[string]string{
-					"giveId": userState.Data["giveId"],
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					state = data.ENTER_WINNERS_COUNT_state
+					replyMessage = data.ENTER_WINNERS_COUNT_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
-				if err := ad.fsmService.Setstate(userId, data.ENTER_WINNERS_COUNT_state, d); err != nil {
+
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(data.ENTER_WINNERS_COUNT_message)
+				return ctx.Reply(replyMessage, menu)
 			// Ввод колличества победителей конкурса
 			case data.ENTER_WINNERS_COUNT_state:
 				winnersCount, err := strconv.Atoi(ctx.Message().Text)
@@ -234,14 +276,25 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				d := map[string]string{
-					"giveId": userState.Data["giveId"],
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					state = data.ENTER_SUBSCRIPTION_CHANNELS_state
+					replyMessage = data.ENTER_SUBSCRIPTION_CHANNELS_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
-				if err := ad.fsmService.Setstate(userId, data.ENTER_SUBSCRIPTION_CHANNELS_state, d); err != nil {
+
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(data.ENTER_SUBSCRIPTION_CHANNELS_message)
+				return ctx.Reply(replyMessage, menu)
 			// Ввод каналов для проверки подписки
 			case data.ENTER_SUBSCRIPTION_CHANNELS_state:
 				channels := strings.Split(ctx.Message().Text, " ")
@@ -269,51 +322,67 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
-				give, err := ad.giveService.GetGiveById(giveId)
-				if err != nil {
-					return ctx.Reply(data.CANNOT_GET_GIVE_message, data.CANCEL_MENU)
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
+					give, err := ad.giveService.GetGiveById(giveId)
+					if err != nil {
+						return ctx.Reply(data.CANNOT_GET_GIVE_message, data.CANCEL_MENU)
+					}
+
+					isActive := "Не активный"
+					if give.IsActive {
+						isActive = "Активный"
+					}
+
+					img := &telebot.Photo{
+						File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
+					}
+					img.Caption = fmt.Sprintf(
+						data.GIVE_CONTENT_message,
+						give.Title,
+						give.Description,
+					)
+
+					d := map[string]string{
+						"giveId": userState.Data["giveId"],
+					}
+					if err := ad.fsmService.Setstate(userId, data.EDIT_GIVE_state, d); err != nil {
+						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+					}
+
+					_, err = ad.bot.Send(
+						ctx.Recipient(),
+						fmt.Sprintf(
+							data.GIVE_OUTPUT_message,
+							give.Channel,
+							give.TargetChannels,
+							give.StartAt,
+							give.FinishAt,
+							isActive,
+						),
+					)
+					if err != nil {
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, ctx.Recipient()))
+					}
+
+					return ctx.Reply(
+						img,
+						data.ACTIVATE_GIVE_MENU,
+					)
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
 				}
 
-				isActive := "Не активный"
-				if give.IsActive {
-					isActive = "Активный"
-				}
-
-				img := &telebot.Photo{
-					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
-				}
-				img.Caption = fmt.Sprintf(
-					data.GIVE_CONTENT_message,
-					give.Title,
-					give.Description,
-				)
-
-				d := map[string]string{
-					"giveId": userState.Data["giveId"],
-				}
-				if err := ad.fsmService.Setstate(userId, data.EDIT_GIVE_state, d); err != nil {
+				if err := ad.fsmService.Setstate(userId, state, userState.Data); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				_, err = ad.bot.Send(
-					ctx.Recipient(),
-					fmt.Sprintf(
-						data.GIVE_OUTPUT_message,
-						give.Channel,
-						give.TargetChannels,
-						give.StartAt,
-						give.FinishAt,
-						isActive,
-					),
-				)
-				if err != nil {
-					return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, ctx.Recipient()))
-				}
-
-				return ctx.Reply(
-					img,
-					data.ACTIVATE_GIVE_MENU,
-				)
+				return ctx.Reply(replyMessage, menu)
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_message)
 			}
