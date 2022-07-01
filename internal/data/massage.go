@@ -37,7 +37,7 @@ const (
 	CANNOT_SEND_message                = "Не могу отправить сообщение пользователю %s"
 	FINISH_DATE_HAS_PASSED_message     = "Дата окончания конкурса прошла"
 	FINISH_DATE_BEFORE_START_message   = "Дата окончания конкурса раньше старта"
-	BOT_MUST_BE_ADMIN_message          = "Бот долден быть админов в канале %d"
+	BOT_MUST_BE_ADMIN_message          = "Бот должен быть админов в канале %d"
 	I_DONT_UNDERSTAND_message          = "Я тебя не понимаю"
 	GIVE_FIELDS_MUST_BE_FILLED_message = "Поля конкурса должны быть заполнены:\n%s"
 )

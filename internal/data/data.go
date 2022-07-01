@@ -1,6 +1,9 @@
 package data
 
-import "gopkg.in/telebot.v3"
+import (
+	"gopkg.in/telebot.v3"
+	"time"
+)
 
 func InitMenu() {
 	START_MENU.Reply(
@@ -60,4 +63,13 @@ func InitMenu() {
 			BACK_TO_START_BUTTON,
 		},
 	)
+}
+
+func LoadLocation(loc string) error {
+	var err error
+	LOCATION, err = time.LoadLocation(loc)
+	if err != nil {
+		return err
+	}
+	return nil
 }

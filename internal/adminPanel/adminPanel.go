@@ -1,7 +1,7 @@
 package adminPanel
 
 import (
-	"Gives_SDT_Bot/internal/adminPanel/data"
+	data2 "Gives_SDT_Bot/internal/data"
 	"Gives_SDT_Bot/internal/fsm"
 	"Gives_SDT_Bot/internal/give"
 	"Gives_SDT_Bot/internal/images"
@@ -34,7 +34,7 @@ func NewAdminPanel(
 	var adminGroup []int64
 	adminGroup = append(adminGroup, int64(superAdmin))
 
-	data.InitMenu()
+	data2.InitMenu()
 
 	return &AdminPanel{
 		bot:           bot,
@@ -53,7 +53,7 @@ func (ad *AdminPanel) RefreshAdmins() error {
 	if err != nil {
 		return err
 	} else if len(admins) == 0 {
-		return data.ERROR_NO_ADMINS_FOR_REFRESH
+		return data2.ERROR_NO_ADMINS_FOR_REFRESH
 	}
 	ad.adminGroup = admins
 	return nil

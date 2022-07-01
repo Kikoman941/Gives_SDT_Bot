@@ -1,7 +1,7 @@
 package adminPanel
 
 import (
-	"Gives_SDT_Bot/internal/adminPanel/data"
+	"Gives_SDT_Bot/internal/data"
 	"Gives_SDT_Bot/pkg/utils"
 	"fmt"
 	"github.com/go-pg/pg/v10"
@@ -55,7 +55,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 				}
 
-				img.Caption = ClearTextForMarkdownV2(
+				img.Caption = data.ClearTextForMarkdownV2(
 					fmt.Sprintf(
 						data.GIVE_CONTENT_message,
 						give.Title,
@@ -63,13 +63,13 @@ func (ad *AdminPanel) InitTextHandlers() {
 					),
 				)
 
-				text := ClearTextForMarkdownV2(
+				text := data.ClearTextForMarkdownV2(
 					fmt.Sprintf(
 						data.GIVE_OUTPUT_message,
 						give.Channel,
 						give.TargetChannels,
-						give.StartAt,
-						give.FinishAt,
+						give.StartAt.In(data.LOCATION).Format(time.RFC822),
+						give.FinishAt.In(data.LOCATION).Format(time.RFC822),
 						isActive,
 					),
 				)
@@ -215,12 +215,12 @@ func (ad *AdminPanel) InitTextHandlers() {
 			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_state:
 				duration := strings.Split(ctx.Message().Text, " - ")
-				startAt, err := StringToTimeMSK(duration[0], ad.logger)
+				startAt, err := data.StringToTimeMSK(duration[0], ad.logger)
 				if err != nil || startAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_message, duration[0]), data.CANCEL_MENU)
 				}
 				fmt.Println(startAt)
-				finishAt, err := StringToTimeMSK(duration[1], ad.logger)
+				finishAt, err := data.StringToTimeMSK(duration[1], ad.logger)
 				if err != nil || finishAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_message, duration[1]), data.CANCEL_MENU)
 				}
@@ -349,7 +349,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					img := &telebot.Photo{
 						File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 					}
-					img.Caption = ClearTextForMarkdownV2(
+					img.Caption = data.ClearTextForMarkdownV2(
 						fmt.Sprintf(
 							data.GIVE_CONTENT_message,
 							give.Title,
@@ -364,13 +364,13 @@ func (ad *AdminPanel) InitTextHandlers() {
 						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 					}
 
-					text := ClearTextForMarkdownV2(
+					text := data.ClearTextForMarkdownV2(
 						fmt.Sprintf(
 							data.GIVE_OUTPUT_message,
 							give.Channel,
 							give.TargetChannels,
-							give.StartAt,
-							give.FinishAt,
+							give.StartAt.In(data.LOCATION).Format(time.RFC822),
+							give.FinishAt.In(data.LOCATION).Format(time.RFC822),
 							isActive,
 						),
 					)
@@ -387,6 +387,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 						img,
 						&telebot.SendOptions{
 							ReplyMarkup: data.ACTIVATE_GIVE_MENU,
+							ParseMode:   telebot.ModeMarkdownV2,
 						},
 					)
 				} else if workStatus == data.WORK_STATUS_EDIT {

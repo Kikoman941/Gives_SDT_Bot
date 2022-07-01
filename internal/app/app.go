@@ -2,8 +2,8 @@ package app
 
 import (
 	"Gives_SDT_Bot/internal/adminPanel"
-	"Gives_SDT_Bot/internal/adminPanel/data"
 	"Gives_SDT_Bot/internal/config"
+	"Gives_SDT_Bot/internal/data"
 	"Gives_SDT_Bot/internal/fsm"
 	fsmDB "Gives_SDT_Bot/internal/fsm/db"
 	"Gives_SDT_Bot/internal/give"
@@ -30,6 +30,11 @@ type App struct {
 
 func NewApp(config *config.Config, logger *logging.Logger) *App {
 	ctx := context.TODO()
+
+	if err := data.LoadLocation("Europe/Moscow"); err != nil {
+		logger.Fatalf("cannot load time location: %s", err)
+		return nil
+	}
 
 	logger.Info("Initialization postgresql client")
 	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgresqlDSN)

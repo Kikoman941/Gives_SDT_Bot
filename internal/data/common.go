@@ -1,4 +1,4 @@
-package adminPanel
+package data
 
 import (
 	"Gives_SDT_Bot/internal/give"
@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 )
+
+var LOCATION *time.Location
 
 func GivesToButtons(gives []give.Give) []telebot.Btn {
 	var buttons []telebot.Btn
@@ -25,8 +27,7 @@ func GivesToButtons(gives []give.Give) []telebot.Btn {
 }
 
 func StringToTimeMSK(str string, logger *logging.Logger) (time.Time, error) {
-	location, _ := time.LoadLocation("Europe/Moscow")
-	t, err := time.ParseInLocation("02.01.2006 15:04", str, location)
+	t, err := time.ParseInLocation("02.01.2006 15:04", str, LOCATION)
 	if err != nil {
 		logger.Error(err)
 		return time.Time{}, err
@@ -36,7 +37,7 @@ func StringToTimeMSK(str string, logger *logging.Logger) (time.Time, error) {
 }
 
 func ClearTextForMarkdownV2(text string) string {
-	badCharacters := []string{"<", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+	badCharacters := []string{"`", "<", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
 	for _, ch := range badCharacters {
 		text = strings.ReplaceAll(text, ch, fmt.Sprintf("\\%s", ch))
 	}
