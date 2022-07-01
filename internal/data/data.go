@@ -39,8 +39,7 @@ func InitMenu() {
 			EDIT_DESCRIPTION_BUTTON,
 		},
 		[]telebot.Btn{
-			EDIT_START_BUTTON,
-			EDIT_FINISH_BUTTON,
+			EDIT_START_FINISH_BUTTON,
 		},
 		[]telebot.Btn{
 			EDIT_IMAGE_BUTTON,
@@ -51,6 +50,7 @@ func InitMenu() {
 			EDIT_TARGET_CHANNELS_BUTTON,
 		},
 		[]telebot.Btn{
+			DELETE_GIVE_BUTTON,
 			BACK_TO_START_BUTTON,
 		},
 	)

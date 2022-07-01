@@ -7,6 +7,7 @@ type Give struct {
 	Id             int       `pg:"id,pk"`
 	Owner          int       `pg:"owner"`
 	IsActive       bool      `pg:"isActive"`
+	IsDeleted      bool      `pg:"isDeleted"`
 	StartAt        time.Time `pg:"startAt"`
 	FinishAt       time.Time `pg:"finishAt"`
 	Title          string    `pg:"title"`

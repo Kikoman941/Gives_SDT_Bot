@@ -17,6 +17,7 @@ const (
 	GIVE_CONTENT_message                = "*%s*\n\n%s"
 	GIVE_SUCCESSFULLY_ACTIVATE_message  = "Конкурс успешно активирован и будет опубликован в соответствии с параметрами"
 	GIVE_SUCCESSFULL_DEACTIVATE_message = "Конкурс успешно снят с публикации. Теперь он не активен"
+	GIVE_SUCCESSFULLY_DELETE_message    = "Конкурс успешно удален, он больше не будет выводится в списке твоих конкурсов"
 	SELECT_PROPERTY_TO_EDIT_message     = "Что ты хочешь изменить?"
 
 	CANNOT_GET_ADMINS_message          = "Не могу получить список админов. Обратитесь к разработчику"
