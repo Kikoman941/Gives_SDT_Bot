@@ -25,6 +25,7 @@ CREATE TABLE public.gives (
 	"startAt" timestamptz NULL,
 	"finishAt" timestamptz NULL,
 	"channel" text NULL,
+	"messageId" text NULL,
 	"targetChannels" _text NULL,
     "winnersCount" int4 NULL,
 	CONSTRAINT gives_pk PRIMARY KEY ("id"),

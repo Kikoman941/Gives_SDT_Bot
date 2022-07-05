@@ -21,11 +21,11 @@ func (r *repository) Create(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-func (r *repository) FindAllWithConditions(ctx context.Context, conditions string) ([]user.User, error) {
+func (r *repository) FindAllWithConditions(ctx context.Context, conditions string, params ...interface{}) ([]user.User, error) {
 	var users []user.User
 
 	err := r.client.ModelContext(ctx, &users).
-		Where(conditions).
+		Where(conditions, params...).
 		Select()
 	if err != nil {
 		return nil, err

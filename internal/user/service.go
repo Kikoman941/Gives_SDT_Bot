@@ -4,7 +4,6 @@ import (
 	"Gives_SDT_Bot/pkg/logging"
 	"Gives_SDT_Bot/pkg/utils"
 	"context"
-	"fmt"
 )
 
 type Service struct {
@@ -36,9 +35,19 @@ func (s *Service) AddUser(telegramId int64, isAdmin bool) (int, error) {
 }
 
 func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
-	users, err := s.repository.FindAllWithConditions(context.TODO(), fmt.Sprintf("\"tgId\"='%d'", telegramId))
+	users, err := s.repository.FindAllWithConditions(context.TODO(), `"tgId"=?`, telegramId)
 	if err != nil {
 		s.logger.Errorf("cannot find user with tgId=%d: %s", telegramId, err)
+		return 0, err
+	}
+
+	return users[0].ID, nil
+}
+
+func (s *Service) GetTgIdByUserId(userId int) (int, error) {
+	users, err := s.repository.FindAllWithConditions(context.TODO(), `"id"=?`, userId)
+	if err != nil {
+		s.logger.Errorf("cannot find user userId=%d: %s", userId, err)
 		return 0, err
 	}
 
@@ -48,7 +57,7 @@ func (s *Service) GetUserIdByTgId(telegramId int64) (int, error) {
 func (s *Service) GetAdmins() ([]int64, error) {
 	var adminsIds []int64
 
-	admins, err := s.repository.FindAllWithConditions(context.TODO(), "\"isAdmin\"=true")
+	admins, err := s.repository.FindAllWithConditions(context.TODO(), `"isAdmin"=?`, true)
 	if err != nil {
 		s.logger.Error("cannot get admins")
 		return nil, err

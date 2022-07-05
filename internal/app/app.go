@@ -70,7 +70,14 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	imagesService := images.NewImagesService(imagesRepo, logger)
 
 	logger.Info("Initialization publisher")
-	pub, err := publisher.NewPublisher(bot, logger)
+	pub, err := publisher.NewPublisher(
+		bot,
+		userService,
+		giveService,
+		imagesService,
+		config.PublisherTimeout,
+		logger,
+	)
 	if err != nil {
 		logger.Fatalf("cannot init publisher: %s", err)
 		return nil
@@ -79,7 +86,6 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	logger.Info("Initialization admin panel")
 	ap := adminPanel.NewAdminPanel(
 		bot,
-		config.BotUsername,
 		config.SuperAdmin,
 		userService,
 		giveService,

@@ -22,3 +22,16 @@ func CreateReplyMenu(buttons ...telebot.Btn) *telebot.ReplyMarkup {
 
 	return menu
 }
+
+func CreateInlineMenu(buttons ...telebot.Btn) *telebot.ReplyMarkup {
+	var rows []telebot.Row
+	menu := &telebot.ReplyMarkup{}
+
+	for _, button := range buttons {
+		rows = append(rows, telebot.Row{button})
+	}
+
+	menu.Inline(rows...)
+
+	return menu
+}

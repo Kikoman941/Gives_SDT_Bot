@@ -12,7 +12,6 @@ import (
 
 type AdminPanel struct {
 	bot           *telebot.Bot
-	botUsername   string
 	adminGroup    []int64
 	userService   *user.Service
 	giveService   *give.Service
@@ -23,7 +22,6 @@ type AdminPanel struct {
 
 func NewAdminPanel(
 	bot *telebot.Bot,
-	botUsername string,
 	superAdmin int,
 	userService *user.Service,
 	giveService *give.Service,
@@ -38,7 +36,6 @@ func NewAdminPanel(
 
 	return &AdminPanel{
 		bot:           bot,
-		botUsername:   botUsername,
 		adminGroup:    adminGroup,
 		userService:   userService,
 		giveService:   giveService,
@@ -73,7 +70,7 @@ func (ad *AdminPanel) checkBotIsAdmin(channelId int64) (bool, error) {
 	}
 
 	for _, admin := range channelAdmins {
-		if admin.User.Username == ad.botUsername {
+		if admin.User.Username == ad.bot.Me.Username {
 			return true, nil
 		}
 	}

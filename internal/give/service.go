@@ -4,6 +4,7 @@ import (
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 	"fmt"
+	"time"
 )
 
 type Service struct {
@@ -83,6 +84,23 @@ func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
 	}
 
 	return gives[0], nil
+}
+
+func (s *Service) GetStartedGive() []Give {
+	gives, err := s.repository.FindAllWithConditions(
+		context.TODO(),
+		`"isActive"=? and "startAt">=?" and "messageId"=?`,
+		true,
+		time.Now(),
+		nil,
+	)
+	if err != nil {
+		s.logger.Errorf("cannot get started gives: %s", err)
+	} else if len(gives) == 0 {
+		s.logger.Info("not found started gives")
+	}
+
+	return gives
 }
 
 func (s *Service) CheckFilling(give *Give) []string {

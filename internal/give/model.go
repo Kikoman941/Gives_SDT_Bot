@@ -15,5 +15,10 @@ type Give struct {
 	Image          string    `pg:"image"`
 	WinnersCount   int       `pg:"winnersCount"`
 	Channel        string    `pg:"channel"`
+	MessageId      string    `pg:"messageId"`
 	TargetChannels []string  `pg:"targetChannels,array"`
+}
+
+func (g *Give) Recipient() string {
+	return g.Channel
 }
