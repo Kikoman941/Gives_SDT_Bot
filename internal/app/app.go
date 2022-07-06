@@ -10,6 +10,8 @@ import (
 	giveDB "Gives_SDT_Bot/internal/give/db"
 	"Gives_SDT_Bot/internal/images"
 	imagesDB "Gives_SDT_Bot/internal/images/db"
+	"Gives_SDT_Bot/internal/member"
+	memberDB "Gives_SDT_Bot/internal/member/db"
 	"Gives_SDT_Bot/internal/publisher"
 	"Gives_SDT_Bot/internal/user"
 	userDB "Gives_SDT_Bot/internal/user/db"
@@ -64,11 +66,13 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	userRepo := userDB.NewRepository(postgresqlClient, logger)
 	fsmRepo := fsmDB.NewRepository(postgresqlClient, logger)
 	giveRepo := giveDB.NewRepository(postgresqlClient, logger)
+	memberRepo := memberDB.NewRepository(postgresqlClient, logger)
 	imagesRepo := imagesDB.NewRepository(bot, logger)
 
 	userService := user.NewUserService(userRepo, logger)
 	fsmService := fsm.NewFSMService(fsmRepo, logger)
 	giveService := give.NewGiveService(giveRepo, logger)
+	memberService := member.NewMemberService(memberRepo, logger)
 	imagesService := images.NewImagesService(imagesRepo, logger)
 
 	logger.Info("Initialization publisher")
@@ -76,6 +80,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 		bot,
 		userService,
 		giveService,
+		memberService,
 		imagesService,
 		config.PublisherTimeout,
 		loc,
@@ -113,6 +118,8 @@ func (a *App) Run() error {
 			return err
 		}
 	}
+
+	a.publisher.InitButtonHandlers()
 
 	a.adminPanel.InitCommandHandlers()
 	a.adminPanel.InitButtonHandlers()

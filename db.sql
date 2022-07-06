@@ -31,3 +31,9 @@ CREATE TABLE public.gives (
 	CONSTRAINT gives_pk PRIMARY KEY ("id"),
 	CONSTRAINT gives_fk FOREIGN KEY ("owner") REFERENCES public.users("id")
 );
+
+CREATE TABLE public.gives_members (
+    "giveId" int4 NOT NULL,
+    "memberTgId" text NOT NULL,
+    CONSTRAINT gives_members_fk FOREIGN KEY ("giveId") REFERENCES public.gives("id")
+)

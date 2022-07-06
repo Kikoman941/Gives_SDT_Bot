@@ -4,6 +4,7 @@ import (
 	"Gives_SDT_Bot/internal/data"
 	"Gives_SDT_Bot/internal/give"
 	"Gives_SDT_Bot/internal/images"
+	"Gives_SDT_Bot/internal/member"
 	"Gives_SDT_Bot/internal/user"
 	"Gives_SDT_Bot/pkg/logging"
 	"Gives_SDT_Bot/pkg/utils"
@@ -17,6 +18,7 @@ type Publisher struct {
 	bot              *telebot.Bot
 	userService      *user.Service
 	giveService      *give.Service
+	memberService    *member.Service
 	imagesService    *images.Service
 	publisherTimeout time.Duration
 	location         *time.Location
@@ -27,6 +29,7 @@ func NewPublisher(
 	bot *telebot.Bot,
 	userService *user.Service,
 	giveService *give.Service,
+	memberService *member.Service,
 	imagesService *images.Service,
 	publisherTimeout time.Duration,
 	location *time.Location,
@@ -36,6 +39,7 @@ func NewPublisher(
 		bot:              bot,
 		userService:      userService,
 		giveService:      giveService,
+		memberService:    memberService,
 		imagesService:    imagesService,
 		publisherTimeout: publisherTimeout,
 		location:         location,
@@ -75,15 +79,24 @@ func (p *Publisher) Run() {
 
 					menu := data.CreateInlineMenu(
 						telebot.Btn{
-							Text:   "Учавствовать",
-							Unique: strconv.Itoa(g.Id),
+							Text: "Учавствовать",
+							Data: strconv.Itoa(g.Id),
 						},
+					)
+
+					text := data.ClearTextForMarkdownV2(
+						fmt.Sprintf(
+							data.GIVE_CONTENT_message,
+							g.Title,
+							g.Description,
+						),
 					)
 
 					message, err := p.bot.Send(
 						&g,
-						fmt.Sprintf(data.GIVE_CONTENT_message, g.Title, g.Description),
+						text,
 						menu,
+						telebot.ModeMarkdownV2,
 					)
 					if err != nil {
 						p.logger.Errorf("cannot publish giveId=%d in chanelId=%d: %s", g.Id, chanelId, err)
