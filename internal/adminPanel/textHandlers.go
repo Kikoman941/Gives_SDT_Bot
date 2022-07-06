@@ -69,8 +69,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 						give.Channel,
 						give.TargetChannels,
 						give.WinnersCount,
-						give.StartAt.In(data.LOCATION).Format(time.RFC822),
-						give.FinishAt.In(data.LOCATION).Format(time.RFC822),
+						give.StartAt.In(ad.location).Format(time.RFC822),
+						give.FinishAt.In(ad.location).Format(time.RFC822),
 						isActive,
 					),
 				)
@@ -218,12 +218,12 @@ func (ad *AdminPanel) InitTextHandlers() {
 			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_state:
 				duration := strings.Split(ctx.Message().Text, " - ")
-				startAt, err := data.StringToTimeMSK(duration[0], ad.logger)
+				startAt, err := data.StringToTimeLocation(duration[0], ad.logger, ad.location)
 				if err != nil || startAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_message, duration[0]), data.CANCEL_MENU)
 				}
-				fmt.Println(startAt)
-				finishAt, err := data.StringToTimeMSK(duration[1], ad.logger)
+
+				finishAt, err := data.StringToTimeLocation(duration[1], ad.logger, ad.location)
 				if err != nil || finishAt.IsZero() {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_TIME_message, duration[1]), data.CANCEL_MENU)
 				}
@@ -373,8 +373,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 							give.Channel,
 							give.TargetChannels,
 							give.WinnersCount,
-							give.StartAt.In(data.LOCATION).Format(time.RFC822),
-							give.FinishAt.In(data.LOCATION).Format(time.RFC822),
+							give.StartAt.In(ad.location).Format(time.RFC822),
+							give.FinishAt.In(ad.location).Format(time.RFC822),
 							isActive,
 						),
 					)

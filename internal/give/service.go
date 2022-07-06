@@ -75,7 +75,12 @@ func (s *Service) GetGiveById(giveId int) (Give, error) {
 }
 
 func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
-	gives, err := s.repository.FindAllWithConditions(context.TODO(), `"title"=? and "isDeleted"=?`, giveTitle, false)
+	gives, err := s.repository.FindAllWithConditions(
+		context.TODO(),
+		`"title"=? and "isDeleted"=?`,
+		giveTitle,
+		false,
+	)
 	if err != nil {
 		s.logger.Errorf("cannot get giveTitle=%s: %s", giveTitle, err)
 		return Give{}, err
@@ -86,12 +91,12 @@ func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
 	return gives[0], nil
 }
 
-func (s *Service) GetStartedGive() []Give {
+func (s *Service) GetStartedGive(location *time.Location) []Give {
 	gives, err := s.repository.FindAllWithConditions(
 		context.TODO(),
-		`"isActive"=? and "startAt">=?" and "messageId"=?`,
+		`"isActive"=? and "startAt"<=? and "messageId" is ?`,
 		true,
-		time.Now(),
+		time.Now().In(location).Format(time.RFC3339),
 		nil,
 	)
 	if err != nil {

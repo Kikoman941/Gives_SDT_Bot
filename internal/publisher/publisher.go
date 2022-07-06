@@ -19,6 +19,7 @@ type Publisher struct {
 	giveService      *give.Service
 	imagesService    *images.Service
 	publisherTimeout time.Duration
+	location         *time.Location
 	logger           *logging.Logger
 }
 
@@ -28,6 +29,7 @@ func NewPublisher(
 	giveService *give.Service,
 	imagesService *images.Service,
 	publisherTimeout time.Duration,
+	location *time.Location,
 	logger *logging.Logger,
 ) (*Publisher, error) {
 	return &Publisher{
@@ -36,6 +38,7 @@ func NewPublisher(
 		giveService:      giveService,
 		imagesService:    imagesService,
 		publisherTimeout: publisherTimeout,
+		location:         location,
 		logger:           logger,
 	}, nil
 }
@@ -43,66 +46,69 @@ func NewPublisher(
 func (p *Publisher) Run() {
 	go func() {
 		for {
-			readyGives := p.giveService.GetStartedGive()
-			if len(readyGives) == 0 {
-				continue
-			}
-
-			for _, g := range readyGives {
-				tgId, err := p.userService.GetTgIdByUserId(g.Owner)
-				if err != nil {
-					p.logger.Errorf("cannot get user userId=%d: %s", g.Owner, err)
-					continue
-				}
-
-				recipient, err := p.bot.ChatByID(int64(tgId))
-				if err != nil {
-					p.logger.Errorf("cannot get chat by id tgId=%d: %s", tgId, err)
-					continue
-				}
-
-				chanelId, err := utils.StringToInt64(g.Channel)
-				if err != nil {
-					p.logger.Errorf("cannot parse chatId=%d string to int64: %s", chanelId, err)
-					continue
-				}
-
-				menu := data.CreateReplyMenu(
-					telebot.Btn{
-						Text:   "Учавствовать",
-						Unique: strconv.Itoa(g.Id),
-					},
-				)
-
-				message, err := p.bot.Send(
-					&g,
-					fmt.Sprintf(data.GIVE_CONTENT_message, g.Title, g.Description),
-					menu,
-				)
-				if err != nil {
-					p.logger.Errorf("cannot publish giveId=%d in chanelId=%d: %s", g.Id, chanelId, err)
-
-					_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_PUBLISH_GIVE_message, g.Id))
+			readyGives := p.giveService.GetStartedGive(p.location)
+			if len(readyGives) != 0 {
+				for _, g := range readyGives {
+					tgId, err := p.userService.GetTgIdByUserId(g.Owner)
 					if err != nil {
-						p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+						p.logger.Errorf("cannot get user userId=%d: %s", g.Owner, err)
 						continue
 					}
-					continue
-				}
 
-				err = p.giveService.UpdateGive(g.Id, `"messageId"=?`, message.ID)
-				if err != nil {
-					p.logger.Errorf("cannot update giveId=%d: %s", g.Id, err)
-
-					_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNON_UPDATE_GIVE_ON_PUBLICATION_message, g.Id))
+					tgIdInt64, err := utils.StringToInt64(tgId)
 					if err != nil {
-						p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+						p.logger.Errorf("cannot parse tgId=%s string to int64: %s", tgId, err)
 						continue
 					}
-					continue
+
+					recipient, err := p.bot.ChatByID(tgIdInt64)
+					if err != nil {
+						p.logger.Errorf("cannot get chat by id tgId=%d: %s", tgIdInt64, err)
+						continue
+					}
+
+					chanelId, err := utils.StringToInt64(g.Channel)
+					if err != nil {
+						p.logger.Errorf("cannot parse chatId=%d string to int64: %s", chanelId, err)
+						continue
+					}
+
+					menu := data.CreateInlineMenu(
+						telebot.Btn{
+							Text:   "Учавствовать",
+							Unique: strconv.Itoa(g.Id),
+						},
+					)
+
+					message, err := p.bot.Send(
+						&g,
+						fmt.Sprintf(data.GIVE_CONTENT_message, g.Title, g.Description),
+						menu,
+					)
+					if err != nil {
+						p.logger.Errorf("cannot publish giveId=%d in chanelId=%d: %s", g.Id, chanelId, err)
+
+						_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_PUBLISH_GIVE_message, g.Id))
+						if err != nil {
+							p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+							continue
+						}
+						continue
+					}
+
+					err = p.giveService.UpdateGive(g.Id, `"messageId"=?`, message.ID)
+					if err != nil {
+						p.logger.Errorf("cannot update giveId=%d: %s", g.Id, err)
+
+						_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNON_UPDATE_GIVE_ON_PUBLICATION_message, g.Id))
+						if err != nil {
+							p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+							continue
+						}
+						continue
+					}
 				}
 			}
-
 			time.Sleep(p.publisherTimeout)
 		}
 	}()

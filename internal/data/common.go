@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var LOCATION *time.Location
-
 func GivesToButtons(gives []give.Give) []telebot.Btn {
 	var buttons []telebot.Btn
 	for _, g := range gives {
@@ -26,8 +24,8 @@ func GivesToButtons(gives []give.Give) []telebot.Btn {
 	return buttons
 }
 
-func StringToTimeMSK(str string, logger *logging.Logger) (time.Time, error) {
-	t, err := time.ParseInLocation("02.01.2006 15:04", str, LOCATION)
+func StringToTimeLocation(str string, logger *logging.Logger, location *time.Location) (time.Time, error) {
+	t, err := time.ParseInLocation("02.01.2006 15:04", str, location)
 	if err != nil {
 		logger.Error(err)
 		return time.Time{}, err

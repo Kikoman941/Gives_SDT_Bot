@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"gopkg.in/telebot.v3"
+	"time"
 )
 
 type App struct {
@@ -31,7 +32,8 @@ type App struct {
 func NewApp(config *config.Config, logger *logging.Logger) *App {
 	ctx := context.TODO()
 
-	if err := data.LoadLocation("Europe/Moscow"); err != nil {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
 		logger.Fatalf("cannot load time location: %s", err)
 		return nil
 	}
@@ -76,6 +78,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 		giveService,
 		imagesService,
 		config.PublisherTimeout,
+		loc,
 		logger,
 	)
 	if err != nil {
@@ -91,6 +94,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 		giveService,
 		fsmService,
 		imagesService,
+		loc,
 		logger,
 	)
 
