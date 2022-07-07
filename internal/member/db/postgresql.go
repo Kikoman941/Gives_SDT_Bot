@@ -13,7 +13,6 @@ type repository struct {
 }
 
 func (r *repository) Create(ctx context.Context, member *member.Member) error {
-	r.logger.Debug(member)
 	query := r.client.ModelContext(ctx, member)
 	_, err := query.Insert()
 	if err != nil {

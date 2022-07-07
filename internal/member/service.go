@@ -20,11 +20,11 @@ func NewMemberService(repository Repository, logger *logging.Logger) *Service {
 func (s *Service) SaveGiveMember(giveId int, memberTgId string) error {
 	member := &Member{
 		GiveId:     giveId,
-		memberTgId: memberTgId,
+		MemberTgId: memberTgId,
 	}
 
 	if err := s.repository.Create(context.TODO(), member); err != nil {
-		s.logger.Errorf("cannot save give member giveId=%d memberTgId=%s: %s", giveId, memberTgId, err)
+		s.logger.Errorf("cannot save give member giveId=%d MemberTgId=%s: %s", giveId, memberTgId, err)
 		return err
 	}
 

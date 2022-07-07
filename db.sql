@@ -36,4 +36,5 @@ CREATE TABLE public.gives_members (
     "giveId" int4 NOT NULL,
     "memberTgId" text NOT NULL,
     CONSTRAINT gives_members_fk FOREIGN KEY ("giveId") REFERENCES public.gives("id")
+    CONSTRAINT gives_members_un UNIQUE ("giveId", "memberTgId")
 )
