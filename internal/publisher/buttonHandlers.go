@@ -7,15 +7,7 @@ import (
 )
 
 func (p *Publisher) InitButtonHandlers() {
-	// Тригерится на Inline кнопку и отправляет respond
-	p.bot.Handle(
-		telebot.OnInlineResult,
-		func(ctx telebot.Context) error {
-			return ctx.Respond()
-		},
-	)
-
-	// Тригерится на respond
+	// Тригерится на Inline кнопку
 	p.bot.Handle(
 		telebot.OnCallback,
 		func(ctx telebot.Context) error {
@@ -30,7 +22,12 @@ func (p *Publisher) InitButtonHandlers() {
 				return nil
 			}
 
-			return nil
+			return ctx.Respond(
+				&telebot.CallbackResponse{
+					Text:      "YES",
+					ShowAlert: false,
+				},
+			)
 		},
 	)
 }
