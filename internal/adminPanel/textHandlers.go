@@ -51,11 +51,11 @@ func (ad *AdminPanel) InitTextHandlers() {
 					isActive = "Активный"
 				}
 
-				img := &telebot.Photo{
+				msg := &telebot.Photo{
 					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 				}
 
-				img.Caption = data.ClearTextForMarkdownV2(
+				msg.Caption = data.ClearTextForMarkdownV2(
 					fmt.Sprintf(
 						data.GIVE_CONTENT_message,
 						give.Title,
@@ -85,13 +85,13 @@ func (ad *AdminPanel) InitTextHandlers() {
 
 				if give.IsActive {
 					return ctx.Reply(
-						img,
+						msg,
 						data.ACTIVE_GIVE_MENU,
 						telebot.ModeMarkdownV2,
 					)
 				} else {
 					return ctx.Reply(
-						img,
+						msg,
 						data.ACTIVATE_GIVE_MENU,
 						telebot.ModeMarkdownV2,
 					)
@@ -349,10 +349,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 						isActive = "Активный"
 					}
 
-					img := &telebot.Photo{
+					msg := &telebot.Photo{
 						File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
 					}
-					img.Caption = data.ClearTextForMarkdownV2(
+					msg.Caption = data.ClearTextForMarkdownV2(
 						fmt.Sprintf(
 							data.GIVE_CONTENT_message,
 							give.Title,
@@ -388,7 +388,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					}
 
 					return ctx.Reply(
-						img,
+						msg,
 						&telebot.SendOptions{
 							ReplyMarkup: data.ACTIVATE_GIVE_MENU,
 							ParseMode:   telebot.ModeMarkdownV2,

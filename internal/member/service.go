@@ -1,6 +1,7 @@
 package member
 
 import (
+	"Gives_SDT_Bot/internal/data"
 	"Gives_SDT_Bot/pkg/logging"
 	"context"
 )
@@ -24,7 +25,9 @@ func (s *Service) SaveGiveMember(giveId int, memberTgId string) error {
 	}
 
 	if err := s.repository.Create(context.TODO(), member); err != nil {
-		s.logger.Errorf("cannot save give member giveId=%d MemberTgId=%s: %s", giveId, memberTgId, err)
+		if err != data.ERROR_MEMBER_ALREADY_EXIST {
+			s.logger.Errorf("cannot save give member giveId=%d MemberTgId=%s: %s", giveId, memberTgId, err)
+		}
 		return err
 	}
 

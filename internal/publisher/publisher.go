@@ -60,21 +60,21 @@ func (p *Publisher) serveStartedGives() {
 	readyGives := p.giveService.GetStartedGive(p.location)
 	if len(readyGives) != 0 {
 		for _, g := range readyGives {
-			tgId, err := p.userService.GetTgIdByUserId(g.Owner)
+			ownerTgId, err := p.userService.GetTgIdByUserId(g.Owner)
 			if err != nil {
 				p.logger.Errorf("cannot get user userId=%d: %s", g.Owner, err)
 				continue
 			}
 
-			tgIdInt64, err := utils.StringToInt64(tgId)
+			ownerTgIdInt64, err := utils.StringToInt64(ownerTgId)
 			if err != nil {
-				p.logger.Errorf("cannot parse tgId=%s string to int64: %s", tgId, err)
+				p.logger.Errorf("cannot parse ownerTgId=%s string to int64: %s", ownerTgId, err)
 				continue
 			}
 
-			recipient, err := p.bot.ChatByID(tgIdInt64)
+			recipient, err := p.bot.ChatByID(ownerTgIdInt64)
 			if err != nil {
-				p.logger.Errorf("cannot get chat by id tgId=%d: %s", tgIdInt64, err)
+				p.logger.Errorf("cannot get chat by id ownerTgId=%d: %s", ownerTgIdInt64, err)
 				continue
 			}
 
@@ -84,7 +84,10 @@ func (p *Publisher) serveStartedGives() {
 				continue
 			}
 
-			text := data.ClearTextForMarkdownV2(
+			msg := &telebot.Photo{
+				File: telebot.FromDisk(fmt.Sprintf("./.images/%s", g.Image)),
+			}
+			msg.Caption = data.ClearTextForMarkdownV2(
 				fmt.Sprintf(
 					data.GIVE_CONTENT_message,
 					g.Title,
@@ -101,7 +104,7 @@ func (p *Publisher) serveStartedGives() {
 
 			message, err := p.bot.Send(
 				&g,
-				text,
+				msg,
 				menu,
 				telebot.ModeMarkdownV2,
 			)
@@ -129,4 +132,25 @@ func (p *Publisher) serveStartedGives() {
 			}
 		}
 	}
+}
+
+func (p *Publisher) checkMemberSubscribe(memberId int64, channelId int64) bool {
+	ch, err := p.bot.ChatByID(channelId)
+	if err != nil {
+		p.logger.Errorf("cannot get chat by channelId=%d: %s", channelId, err)
+		return false
+	}
+	u, err := p.bot.ChatByID(memberId)
+	if err != nil {
+		p.logger.Errorf("cannot get user by memberId=%d: %s", memberId, err)
+		return false
+	}
+
+	m, err := p.bot.ChatMemberOf(ch, u)
+	fmt.Println(m.Rights, m.Role)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
