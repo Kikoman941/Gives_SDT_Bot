@@ -21,6 +21,20 @@ func (r *repository) Create(ctx context.Context, member *member.Member) error {
 	return nil
 }
 
+func (r *repository) FindRandomLimitWithConditions(ctx context.Context, limit int, conditions string, params ...interface{}) ([]member.Member, error) {
+	var members []member.Member
+	err := r.client.ModelContext(ctx, &members).
+		Where(conditions, params...).
+		OrderExpr("random()").
+		Limit(limit).
+		Select()
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
 func NewRepository(dbClient postgresql.Client, logger *logging.Logger) member.Repository {
 	return &repository{
 		client: dbClient,

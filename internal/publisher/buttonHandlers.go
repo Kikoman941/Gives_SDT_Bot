@@ -19,10 +19,39 @@ func (p *Publisher) InitButtonHandlers() {
 				return nil
 			}
 			memberId := ctx.Sender().ID
-			p.checkMemberSubscribe(memberId, -1001422240135)
+
+			give, err := p.giveService.GetGiveById(giveId)
+			if err != nil {
+				return ctx.Respond(
+					&telebot.CallbackResponse{
+						Text:      data.CANNOT_GET_GIVE_message,
+						ShowAlert: true,
+					},
+				)
+			}
+
+			for _, channel := range give.TargetChannels {
+				channelId, err := utils.StringToInt64(channel)
+				if err != nil {
+					return ctx.Respond(
+						&telebot.CallbackResponse{
+							Text:      fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_message, channelId),
+							ShowAlert: true,
+						},
+					)
+				}
+				if !p.checkMemberSubscribe(memberId, channelId) {
+					return ctx.Respond(
+						&telebot.CallbackResponse{
+							Text:      data.MUST_SUBSCRIBE_message,
+							ShowAlert: true,
+						},
+					)
+				}
+			}
 
 			if err := p.memberService.SaveGiveMember(giveId, utils.Int64ToString(ctx.Sender().ID)); err != nil {
-				if err == data.ERROR_MEMBER_ALREADY_EXIST {
+				if err.Error() == data.ERROR_MEMBER_ALREADY_EXIST.Error() {
 					return ctx.Respond(
 						&telebot.CallbackResponse{
 							Text:      data.MEMBER_ALREADY_EXIST_message,

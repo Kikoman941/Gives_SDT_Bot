@@ -33,3 +33,21 @@ func (s *Service) SaveGiveMember(giveId int, memberTgId string) error {
 
 	return nil
 }
+
+func (s *Service) GetRandomMembersByGiveId(giveId int, count int) ([]string, error) {
+	var members []string
+	mbs, err := s.repository.FindRandomLimitWithConditions(context.TODO(), count, `"giveId"=?`, giveId)
+	if err != nil {
+		s.logger.Errorf("cannot get give members giveId=%d: %s", giveId, err)
+		return nil, err
+	} else if len(mbs) == 0 {
+		s.logger.Infof("not found give members giveId=%d", giveId)
+		return nil, nil
+	}
+
+	for _, member := range mbs {
+		members = append(members, member.MemberTgId)
+	}
+
+	return members, nil
+}

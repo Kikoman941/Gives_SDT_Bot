@@ -9,6 +9,7 @@ import (
 	"Gives_SDT_Bot/pkg/logging"
 	"Gives_SDT_Bot/pkg/utils"
 	"fmt"
+	"github.com/go-pg/pg/v10"
 	"gopkg.in/telebot.v3"
 	"strconv"
 	"time"
@@ -51,13 +52,14 @@ func (p *Publisher) Run() {
 	go func() {
 		for {
 			p.serveStartedGives()
+			p.serveFinishedGives()
 			time.Sleep(p.publisherTimeout)
 		}
 	}()
 }
 
 func (p *Publisher) serveStartedGives() {
-	readyGives := p.giveService.GetStartedGive(p.location)
+	readyGives := p.giveService.GetStartedGives(p.location)
 	if len(readyGives) != 0 {
 		for _, g := range readyGives {
 			ownerTgId, err := p.userService.GetTgIdByUserId(g.Owner)
@@ -114,7 +116,6 @@ func (p *Publisher) serveStartedGives() {
 				_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_PUBLISH_GIVE_message, g.Id))
 				if err != nil {
 					p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
-					continue
 				}
 				continue
 			}
@@ -126,10 +127,60 @@ func (p *Publisher) serveStartedGives() {
 				_, err = p.bot.Send(recipient, fmt.Sprintf(data.CANNON_UPDATE_GIVE_ON_PUBLICATION_message, g.Id))
 				if err != nil {
 					p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
-					continue
 				}
 				continue
 			}
+		}
+	}
+}
+
+func (p *Publisher) serveFinishedGives() {
+	finishedGives := p.giveService.GetFinishedGives(p.location)
+	if len(finishedGives) != 0 {
+		for _, g := range finishedGives {
+			ownerTgId, err := p.userService.GetTgIdByUserId(g.Owner)
+			if err != nil {
+				p.logger.Errorf("cannot get user userId=%d: %s", g.Owner, err)
+				continue
+			}
+
+			ownerTgIdInt64, err := utils.StringToInt64(ownerTgId)
+			if err != nil {
+				p.logger.Errorf("cannot parse ownerTgId=%s string to int64: %s", ownerTgId, err)
+				continue
+			}
+
+			recipient, err := p.bot.ChatByID(ownerTgIdInt64)
+			if err != nil {
+				p.logger.Errorf("cannot get chat by id ownerTgId=%d: %s", g.Owner, err)
+				continue
+			}
+
+			winners, err := p.memberService.GetRandomMembersByGiveId(g.Id, g.WinnersCount)
+			if err != nil || winners == nil {
+				if _, err := p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_GET_GIVE_WINNERS_message, g.Id)); err != nil {
+					p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+				}
+				continue
+			}
+
+			err = p.giveService.UpdateGive(
+				g.Id,
+				`"isActive"=?, "winners"=?`,
+				false,
+				pg.Array(winners),
+			)
+			if err != nil {
+				if _, err := p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_UPDATE_FINISHED__GIVE_message, g.Id)); err != nil {
+					p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+				}
+				continue
+			}
+			
+			if _, err := p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_UPDATE_FINISHED__GIVE_message, g.Id)); err != nil {
+				p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
+			}
+			continue
 		}
 	}
 }
@@ -147,8 +198,10 @@ func (p *Publisher) checkMemberSubscribe(memberId int64, channelId int64) bool {
 	}
 
 	m, err := p.bot.ChatMemberOf(ch, u)
-	fmt.Println(m.Rights, m.Role)
 	if err != nil {
+		p.logger.Errorf("cannot get userId=%d status in chatId=%d: %s", memberId, channelId, err)
+		return false
+	} else if m.Role == "left" || m.Role == "kicked" {
 		return false
 	}
 

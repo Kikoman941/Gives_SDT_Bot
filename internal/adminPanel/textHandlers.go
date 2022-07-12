@@ -147,8 +147,6 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				ad.bot.Send(ctx.Chat(), "sadcasdc")
-
 				return ctx.Reply(replyMessage, menu)
 			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_state:

@@ -59,7 +59,7 @@ func (s *Service) GetAdmins() ([]int64, error) {
 
 	admins, err := s.repository.FindAllWithConditions(context.TODO(), `"isAdmin"=?`, true)
 	if err != nil {
-		s.logger.Error("cannot get admins")
+		s.logger.Errorf("cannot get admins: %s", err)
 		return nil, err
 	}
 

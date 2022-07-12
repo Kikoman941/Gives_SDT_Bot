@@ -91,7 +91,7 @@ func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
 	return gives[0], nil
 }
 
-func (s *Service) GetStartedGive(location *time.Location) []Give {
+func (s *Service) GetStartedGives(location *time.Location) []Give {
 	gives, err := s.repository.FindAllWithConditions(
 		context.TODO(),
 		`"isActive"=? and "startAt"<=? and "messageId" is ?`,
@@ -103,6 +103,23 @@ func (s *Service) GetStartedGive(location *time.Location) []Give {
 		s.logger.Errorf("cannot get started gives: %s", err)
 	} else if len(gives) == 0 {
 		s.logger.Info("not found started gives")
+	}
+
+	return gives
+}
+
+func (s *Service) GetFinishedGives(location *time.Location) []Give {
+	gives, err := s.repository.FindAllWithConditions(
+		context.TODO(),
+		`"isActive"=? and "finishAt"<=? and "messageId" is not ?`,
+		true,
+		time.Now().In(location).Format(time.RFC3339),
+		nil,
+	)
+	if err != nil {
+		s.logger.Errorf("cannot get finished gives: %s", err)
+	} else if len(gives) == 0 {
+		s.logger.Info("not found finished gives")
 	}
 
 	return gives

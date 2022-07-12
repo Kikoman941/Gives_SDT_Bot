@@ -32,8 +32,6 @@ type App struct {
 }
 
 func NewApp(config *config.Config, logger *logging.Logger) *App {
-	ctx := context.TODO()
-
 	loc, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
 		logger.Fatalf("cannot load time location: %s", err)
@@ -41,7 +39,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 	}
 
 	logger.Info("Initialization postgresql client")
-	postgresqlClient, err := postgresql.NewClient(ctx, config.PostgresqlDSN)
+	postgresqlClient, err := postgresql.NewClient(context.TODO(), config.PostgresqlDSN)
 	if err != nil {
 		logger.Fatalf("cannot get postgresql client: %s", err)
 		return nil
