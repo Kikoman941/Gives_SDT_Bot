@@ -34,8 +34,7 @@ func (r *repository) FindAllWithConditions(ctx context.Context, conditions strin
 }
 
 func (r *repository) UpdateWithConditions(ctx context.Context, conditions string, update string, params ...interface{}) error {
-	var g give.Give
-	_, err := r.client.ModelContext(ctx, &g).
+	_, err := r.client.ModelContext(ctx, &give.Give{}).
 		Where(conditions).
 		Set(update, params...).
 		Update()

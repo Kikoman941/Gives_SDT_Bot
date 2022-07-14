@@ -35,6 +35,17 @@ func (r *repository) FindRandomLimitWithConditions(ctx context.Context, limit in
 	return members, nil
 }
 
+func (r *repository) DeleteWithConditions(ctx context.Context, conditions string, params ...interface{}) error {
+	_, err := r.client.ModelContext(ctx, &member.Member{}).
+		Where(conditions, params...).
+		Delete()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewRepository(dbClient postgresql.Client, logger *logging.Logger) member.Repository {
 	return &repository{
 		client: dbClient,

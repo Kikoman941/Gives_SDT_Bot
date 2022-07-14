@@ -42,6 +42,7 @@ const (
 	CANNOT_CHECK_BOT_IS_ADMIN_message  = "Не могу проверить канал %d на админа"
 	CANNOT_SEND_message                = "Не могу отправить сообщение пользователю %s"
 	CANNOT_GET_WINNERS_DATA_message    = "Не могу получить данные победителей %s. Обратитесь к разработчику"
+	CANNOT_CLEAR_GIVE_MEMBERS_message  = "Не могу очистить участников конкурса giveId=%d. Обратитесь к разработчику"
 	FINISH_DATE_HAS_PASSED_message     = "Дата окончания конкурса прошла"
 	FINISH_DATE_BEFORE_START_message   = "Дата окончания конкурса раньше старта"
 	BOT_MUST_BE_ADMIN_message          = "Бот должен быть админов в канале %d"

@@ -51,3 +51,13 @@ func (s *Service) GetRandomMembersByGiveId(giveId int, count int) ([]string, err
 
 	return members, nil
 }
+
+func (s *Service) ClearGiveMembers(giveId int) error {
+	err := s.repository.DeleteWithConditions(context.TODO(), `"giveId"=?`, giveId)
+	if err != nil {
+		s.logger.Errorf("cannot delete give members giveId=%d: %s", giveId, err)
+		return err
+	}
+
+	return nil
+}

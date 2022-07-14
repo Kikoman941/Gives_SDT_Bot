@@ -437,6 +437,10 @@ func (ad *AdminPanel) InitButtonHandlers() {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
+				if err := ad.memberService.ClearGiveMembers(giveId); err != nil {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_CLEAR_GIVE_MEMBERS_message, giveId))
+				}
+
 				if err := ad.fsmService.SetState(userId, data.START_MENU_state, nil); err != nil {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
