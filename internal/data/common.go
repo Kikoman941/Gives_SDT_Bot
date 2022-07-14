@@ -3,6 +3,7 @@ package data
 import (
 	"Gives_SDT_Bot/internal/give"
 	"Gives_SDT_Bot/pkg/logging"
+	"Gives_SDT_Bot/pkg/utils"
 	"fmt"
 	"gopkg.in/telebot.v3"
 	"strconv"
@@ -40,4 +41,25 @@ func ClearTextForMarkdownV2(text string) string {
 		text = strings.ReplaceAll(text, ch, fmt.Sprintf("\\%s", ch))
 	}
 	return text
+}
+
+func GetTgLinkNicks(b *telebot.Bot, logger *logging.Logger, tgIds []string) []string {
+	var tgNicks []string
+	for _, tgId := range tgIds {
+		tgIdInt64, err := utils.StringToInt64(tgId)
+		if err != nil {
+			logger.Errorf("cannot parse tgId=%s string to int64: %s", tgId, err)
+			return nil
+		}
+
+		chat, err := b.ChatByID(tgIdInt64)
+		if err != nil {
+			logger.Errorf("cannot get chat by userId userTgId=%d: %s", tgIdInt64, err)
+			return nil
+		}
+
+		tgNicks = append(tgNicks, fmt.Sprintf("[%s](tg://user?id=%d)\n", chat.Username, tgIdInt64))
+	}
+
+	return tgNicks
 }

@@ -2,7 +2,9 @@ package adminPanel
 
 import (
 	"Gives_SDT_Bot/internal/data"
+	"Gives_SDT_Bot/pkg/utils"
 	"fmt"
+	"github.com/go-pg/pg/v10"
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 	"strconv"
@@ -163,13 +165,65 @@ func (ad *AdminPanel) InitButtonHandlers() {
 				return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 			}
 
-			err = ad.giveService.UpdateGive(giveId, `"isActive"=?`, false)
+			give, err := ad.giveService.GetGiveById(giveId)
 			if err != nil {
-				return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
+				return ctx.Reply(data.CANNOT_GET_GIVE_message, data.CANCEL_MENU)
+			}
+
+			winners, err := ad.memberService.GetRandomMembersByGiveId(give.Id, give.WinnersCount)
+			if err != nil || winners == nil || len(winners) == 0 {
+				return ctx.Reply(fmt.Sprintf(data.CANNOT_GET_GIVE_WINNERS_message, give.Id))
+			}
+
+			winnersTgNicks := data.GetTgLinkNicks(ad.bot, ad.logger, winners)
+			if len(winnersTgNicks) != len(winners) {
+				return ctx.Reply(fmt.Sprintf(data.CANNOT_GET_WINNERS_DATA_message, winners), data.CANCEL_MENU)
+			}
+
+			err = ad.giveService.UpdateGive(
+				give.Id,
+				`"isActive"=?, "winners"=?`,
+				false,
+				pg.Array(winners),
+			)
+			if err != nil {
+				if _, err := ad.bot.Send(ctx.Recipient(), fmt.Sprintf(data.CANNOT_UPDATE_FINISHED_GIVE_message, give.Id)); err != nil {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, err))
+				}
 			}
 
 			if err := ad.fsmService.SetState(userId, data.START_MENU_state, nil); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+			}
+
+			channelIdInt64, err := utils.StringToInt64(give.Channel)
+			if err != nil {
+				return ctx.Reply(data.CANNOT_PARSE_CHANNEL_message, give.Channel, err)
+			}
+			text := data.ClearTextForMarkdownV2(
+				fmt.Sprintf(
+					data.FINISHED_GIVE_CONTENT_message,
+					give.Title,
+					give.Description,
+				),
+			)
+			_, err = ad.bot.EditCaption(
+				telebot.StoredMessage{
+					MessageID: give.MessageId,
+					ChatID:    channelIdInt64,
+				},
+				text,
+				telebot.ModeMarkdownV2,
+			)
+			if err != nil {
+				return ctx.Reply(fmt.Sprintf(data.CANNOT_UPDATE_FINISHED_GIVE_message, give.Id))
+			}
+
+			text = data.ClearTextForMarkdownV2(
+				fmt.Sprintf(data.GIVE_SUCCESSFULLY_FINISHED_message, give.Title, winnersTgNicks),
+			)
+			if _, err := ad.bot.Send(ctx.Recipient(), text, telebot.ModeMarkdownV2); err != nil {
+				return ctx.Reply(fmt.Sprintf(data.CANNOT_SEND_message, err))
 			}
 
 			return ctx.Reply(data.GIVE_SUCCESSFULL_DEACTIVATE_message, data.START_MENU)

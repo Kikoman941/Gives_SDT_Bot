@@ -95,6 +95,7 @@ func NewApp(config *config.Config, logger *logging.Logger) *App {
 		config.SuperAdmin,
 		userService,
 		giveService,
+		memberService,
 		fsmService,
 		imagesService,
 		loc,

@@ -140,7 +140,7 @@ func (p *Publisher) serveFinishedGives() {
 				continue
 			}
 
-			winnersTgNicks := p.getTgLinkNicks(winners)
+			winnersTgNicks := data.GetTgLinkNicks(p.bot, p.logger, winners)
 			if len(winnersTgNicks) != len(winners) {
 				p.logger.Errorf("cannot get winners nicks for %s", winners)
 				continue
@@ -153,7 +153,7 @@ func (p *Publisher) serveFinishedGives() {
 				pg.Array(winners),
 			)
 			if err != nil {
-				if _, err := p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_UPDATE_FINISHED__GIVE_message, g.Id)); err != nil {
+				if _, err := p.bot.Send(recipient, fmt.Sprintf(data.CANNOT_UPDATE_FINISHED_GIVE_message, g.Id)); err != nil {
 					p.logger.Errorf("cannot send message to userId=%d: %s", g.Owner, err)
 				}
 				continue
@@ -244,25 +244,4 @@ func (p *Publisher) getChatByUserId(userId int) *telebot.Chat {
 	}
 
 	return chat
-}
-
-func (p *Publisher) getTgLinkNicks(tgIds []string) []string {
-	var tgNicks []string
-	for _, tgId := range tgIds {
-		tgIdInt64, err := utils.StringToInt64(tgId)
-		if err != nil {
-			p.logger.Errorf("cannot parse tgId=%s string to int64: %s", tgId, err)
-			return nil
-		}
-
-		chat, err := p.bot.ChatByID(tgIdInt64)
-		if err != nil {
-			p.logger.Errorf("cannot get chat by userId userTgId=%d: %s", tgIdInt64, err)
-			return nil
-		}
-
-		tgNicks = append(tgNicks, fmt.Sprintf("[%s](tg://user?id=%d)\n", chat.Username, tgIdInt64))
-	}
-
-	return tgNicks
 }

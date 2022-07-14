@@ -5,6 +5,7 @@ import (
 	"Gives_SDT_Bot/internal/fsm"
 	"Gives_SDT_Bot/internal/give"
 	"Gives_SDT_Bot/internal/images"
+	"Gives_SDT_Bot/internal/member"
 	"Gives_SDT_Bot/internal/user"
 	"Gives_SDT_Bot/pkg/logging"
 	"gopkg.in/telebot.v3"
@@ -16,6 +17,7 @@ type AdminPanel struct {
 	adminGroup    []int64
 	userService   *user.Service
 	giveService   *give.Service
+	memberService *member.Service
 	fsmService    *fsm.Service
 	imagesService *images.Service
 	location      *time.Location
@@ -27,6 +29,7 @@ func NewAdminPanel(
 	superAdmin int,
 	userService *user.Service,
 	giveService *give.Service,
+	memberService *member.Service,
 	fsmService *fsm.Service,
 	imagesService *images.Service,
 	location *time.Location,
@@ -42,6 +45,7 @@ func NewAdminPanel(
 		adminGroup:    adminGroup,
 		userService:   userService,
 		giveService:   giveService,
+		memberService: memberService,
 		fsmService:    fsmService,
 		imagesService: imagesService,
 		location:      location,
