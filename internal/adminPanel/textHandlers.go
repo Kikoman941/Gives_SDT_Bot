@@ -100,7 +100,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 			// Ввод канала на котором будет проходить конкурс
 			case data.ENTER_TARGET_CHANNEL_state:
 				channelStr := ctx.Message().Text
-				channel, err := utils.StringToInt64(channelStr)
+				channel, err := utils.StringToInt64(ctx.Message().Text)
 				if err != nil {
 					ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channel, err)
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_message, channel), data.CANCEL_MENU)
@@ -132,12 +132,11 @@ func (ad *AdminPanel) InitTextHandlers() {
 					if err != nil {
 						return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 					}
-					err = ad.giveService.UpdateGive(giveId, `"channel"=?`, channelStr)
-					if err != nil {
+
+					if err = ad.giveService.UpdateGive(giveId, `"channel"=?`, channelStr); err != nil {
 						return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 					}
 
-					userState.Data["giveId"] = strconv.Itoa(giveId)
 					state = data.SELECT_PROPERTY_TO_EDIT_state
 					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
 					menu = data.EDIT_GIVE_MENU
@@ -151,7 +150,6 @@ func (ad *AdminPanel) InitTextHandlers() {
 			// Ввод заголовка конкурса
 			case data.ENTER_GIVE_TITLE_state:
 				giveTitle := ctx.Message().Text
-
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
@@ -189,8 +187,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 				}
 
-				err = ad.giveService.UpdateGive(giveId, `"description"=?`, giveDesc)
-				if err != nil {
+				if err = ad.giveService.UpdateGive(giveId, `"description"=?`, giveDesc); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
@@ -234,20 +231,12 @@ func (ad *AdminPanel) InitTextHandlers() {
 				}
 
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
-				err = ad.giveService.UpdateGive(
-					giveId,
-					`"startAt"=?`,
-					startAt.Format(time.RFC3339),
-				)
-				if err != nil {
+
+				if err = ad.giveService.UpdateGive(giveId, `"startAt"=?`, startAt.Format(time.RFC3339)); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
-				err = ad.giveService.UpdateGive(
-					giveId,
-					`"finishAt"=?`,
-					finishAt.Format(time.RFC3339),
-				)
-				if err != nil {
+
+				if err = ad.giveService.UpdateGive(giveId, `"finishAt"=?`, finishAt.Format(time.RFC3339)); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
@@ -281,8 +270,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 				}
-				err = ad.giveService.UpdateGive(giveId, `"winnersCount"=?`, winnersCount)
-				if err != nil {
+
+				if err = ad.giveService.UpdateGive(giveId, `"winnersCount"=?`, winnersCount); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
@@ -327,8 +316,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 				}
-				err = ad.giveService.UpdateGive(giveId, `"targetChannels"=?`, pg.Array(channels))
-				if err != nil {
+
+				if err = ad.giveService.UpdateGive(giveId, `"targetChannels"=?`, pg.Array(channels)); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
 
@@ -359,7 +348,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 					)
 
 					d := map[string]string{
-						"giveId": userState.Data["giveId"],
+						"giveId":     userState.Data["giveId"],
+						"workStatus": data.WORK_STATUS_EDIT,
 					}
 					if err := ad.fsmService.SetState(userId, data.EDIT_GIVE_state, d); err != nil {
 						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
