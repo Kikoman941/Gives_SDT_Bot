@@ -32,6 +32,9 @@ func (ad *AdminPanel) InitPhotoHandlers() {
 				}
 
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
+				}
 				err = ad.giveService.UpdateGive(giveId, fmt.Sprintf(`"image"='%s'`, filename))
 				if err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)

@@ -109,7 +109,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 				isAdmin, err := ad.checkBotIsAdmin(channel)
 				if err != nil {
 					return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_message, channel), data.CANCEL_MENU)
-				} else if isAdmin == false {
+				} else if !isAdmin {
 					return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_message, channel), data.CANCEL_MENU)
 				}
 
@@ -231,7 +231,9 @@ func (ad *AdminPanel) InitTextHandlers() {
 				}
 
 				giveId, err := strconv.Atoi(userState.Data["giveId"])
-
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
+				}
 				if err = ad.giveService.UpdateGive(giveId, `"startAt"=?`, startAt.Format(time.RFC3339)); err != nil {
 					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 				}
@@ -307,7 +309,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 					isAdmin, err := ad.checkBotIsAdmin(channelId)
 					if err != nil {
 						return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_message, channelId), data.CANCEL_MENU)
-					} else if isAdmin == false {
+					} else if !isAdmin {
 						return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_message, channelId), data.CANCEL_MENU)
 					}
 				}

@@ -7,7 +7,7 @@ run: build
 	./.bin/app
 
 lint:
-	golangci-lint
+	golangci-lint run -c .golangci.yaml
 
 define ENV_EXAMPLE
 IS_PROD=False
