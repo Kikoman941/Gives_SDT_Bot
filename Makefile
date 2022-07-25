@@ -24,3 +24,11 @@ env_example:
   		echo "$$ENV_EXAMPLE" > ".env"; \
   	fi
 
+docker_build:
+	docker build -t SDT_Gives_Bot .
+
+docker_run:
+	docker run \
+		--name SDT_Gives_Bot \
+		-v "${PWD}"/.images:/.images \
+		-d SDT_Gives_Bot

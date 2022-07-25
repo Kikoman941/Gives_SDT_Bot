@@ -1,6 +1,5 @@
+.idea
 .bin
 .images
-.idea
 .env
-db.sql
-logs.txt
+*.txt

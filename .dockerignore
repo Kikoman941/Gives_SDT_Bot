@@ -1,5 +1,8 @@
+.idea
 .bin
 .images
 .dockerignore
 .gitignore
 Makefile
+*.txt
+*.sql
