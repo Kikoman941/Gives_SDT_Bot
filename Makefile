@@ -25,7 +25,7 @@ env_example:
   	fi
 
 docker_build:
-	docker build -t SDT_Gives_Bot .
+	docker build -t sdt_gives_bot .
 
 docker_run:
 	docker run \
