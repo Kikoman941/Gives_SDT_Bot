@@ -31,4 +31,4 @@ docker_run:
 	docker run \
 		--name SDT_Gives_Bot \
 		-v "${PWD}"/.images:/.images \
-		-d SDT_Gives_Bot
+		-d sdt_gives_bot
