@@ -63,3 +63,12 @@ func GetTgLinkNicks(b *telebot.Bot, logger *logging.Logger, tgIds []string) []st
 
 	return tgNicks
 }
+
+func GetChatNameByChatID(b *telebot.Bot, chatId int64, logger *logging.Logger) string {
+	chat, err := b.ChatByID(chatId)
+	if err != nil {
+		logger.Errorf("cannot get chatName by chatID=%d: %s", chatId, err)
+		return ""
+	}
+	return chat.Title
+}

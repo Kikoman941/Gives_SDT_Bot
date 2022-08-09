@@ -58,6 +58,9 @@ func (ad *AdminPanel) InitPhotoHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
+				if err := ctx.Reply(data.GIVE_IMAGE_OK_message); err != nil {
+					return err
+				}
 				return ctx.Reply(replyMessage, menu)
 			}
 

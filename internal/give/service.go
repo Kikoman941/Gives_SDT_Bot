@@ -19,16 +19,16 @@ func NewGiveService(repository Repository, logger *logging.Logger) *Service {
 	}
 }
 
-func (s *Service) CreateGive(channel string, ownerId int) (int, error) {
+func (s *Service) CreateGive(title string, ownerId int) (int, error) {
 	give := &Give{
 		IsActive:  false,
 		IsDeleted: false,
 		Owner:     ownerId,
-		Channel:   channel,
+		Title:     title,
 	}
 
 	if err := s.repository.Create(context.TODO(), give); err != nil {
-		s.logger.Errorf("cannot create give with channel %s: %s", channel, err)
+		s.logger.Errorf("cannot create give with title %s: %s", title, err)
 	}
 
 	return give.Id, nil
@@ -69,23 +69,6 @@ func (s *Service) GetGiveById(giveId int) (Give, error) {
 		return Give{}, err
 	} else if len(gives) == 0 {
 		s.logger.Errorf("not found give giveId=%d", giveId)
-	}
-
-	return gives[0], nil
-}
-
-func (s *Service) GetGiveByTitle(giveTitle string) (Give, error) {
-	gives, err := s.repository.FindAllWithConditions(
-		context.TODO(),
-		`"title"=? and "isDeleted"=?`,
-		giveTitle,
-		false,
-	)
-	if err != nil {
-		s.logger.Errorf("cannot get giveTitle=%s: %s", giveTitle, err)
-		return Give{}, err
-	} else if len(gives) == 0 {
-		s.logger.Errorf("not found give giveTitle=%s", giveTitle)
 	}
 
 	return gives[0], nil

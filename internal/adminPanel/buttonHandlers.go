@@ -41,11 +41,14 @@ func (ad *AdminPanel) InitButtonHandlers() {
 			d := map[string]string{
 				"workStatus": data.WORK_STATUS_NEW,
 			}
-			if err := ad.fsmService.SetState(userId, data.ENTER_TARGET_CHANNEL_state, d); err != nil {
+			if err := ad.fsmService.SetState(userId, data.ENTER_GIVE_TITLE_state, d); err != nil {
 				return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 			}
 
-			return ctx.Reply(data.ENTER_TARGET_CHANNEL_message, data.CANCEL_MENU)
+			if err := ctx.Reply(data.NEW_GIVE_message); err != nil {
+				return err
+			}
+			return ctx.Send(data.ENTER_GIVE_TITLE_message, data.CANCEL_MENU)
 		},
 		middleware.Whitelist(ad.adminGroup...),
 	)
@@ -53,6 +56,7 @@ func (ad *AdminPanel) InitButtonHandlers() {
 	ad.bot.Handle(
 		&data.MY_GIVES_BUTTON,
 		func(ctx telebot.Context) error {
+			fmt.Println()
 			userId, err := ad.userService.GetUserIdByTgId(ctx.Chat().ID)
 			if err != nil || userId == 0 {
 				return ctx.Reply(data.CANNOT_FIND_USER_message, data.CANCEL_MENU)

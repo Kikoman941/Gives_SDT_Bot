@@ -31,9 +31,12 @@ func (ad *AdminPanel) InitTextHandlers() {
 			switch userState.State {
 			// Меню конкурса
 			case data.SELECT_OWN_GIVE_state:
-				giveTitle := ctx.Message().Text
+				selectedGiveId, err := strconv.Atoi(ctx.Callback().Data)
+				if err != nil {
+					return err
+				}
 
-				give, err := ad.giveService.GetGiveByTitle(giveTitle)
+				give, err := ad.giveService.GetGiveById(selectedGiveId)
 				if err != nil {
 					return ctx.Reply(data.CANNOT_GET_GIVE_message, data.CANCEL_MENU)
 				}
@@ -96,36 +99,24 @@ func (ad *AdminPanel) InitTextHandlers() {
 						telebot.ModeMarkdownV2,
 					)
 				}
-
-			// Ввод канала на котором будет проходить конкурс
-			case data.ENTER_TARGET_CHANNEL_state:
-				channelStr := ctx.Message().Text
-				channel, err := utils.StringToInt64(ctx.Message().Text)
-				if err != nil {
-					ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channel, err)
-					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_message, channel), data.CANCEL_MENU)
-				}
-
-				isAdmin, err := ad.checkBotIsAdmin(channel)
-				if err != nil {
-					return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_message, channel), data.CANCEL_MENU)
-				} else if !isAdmin {
-					return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_message, channel), data.CANCEL_MENU)
-				}
+			// Ввод заголовка конкурса
+			case data.ENTER_GIVE_TITLE_state:
+				giveTitle := ctx.Message().Text
 
 				workStatus := userState.Data["workStatus"]
 				state := ""
 				replyMessage := ""
 				menu := &telebot.ReplyMarkup{}
 				if workStatus == data.WORK_STATUS_NEW {
-					giveId, err := ad.giveService.CreateGive(channelStr, userId)
+					giveId, err := ad.giveService.CreateGive(giveTitle, userId)
 					if err != nil || giveId == 0 {
 						return ctx.Reply(data.CANNOT_CREATE_GIVE_message, data.CANCEL_MENU)
 					}
 
 					userState.Data["giveId"] = strconv.Itoa(giveId)
-					state = data.ENTER_GIVE_TITLE_state
-					replyMessage = data.ENTER_GIVE_TITLE_message
+
+					state = data.ENTER_GIVE_DESCRIPTION_state
+					replyMessage = data.ENTER_GIVE_DESCRIPTION_message
 					menu = data.CANCEL_MENU
 				} else if workStatus == data.WORK_STATUS_EDIT {
 					giveId, err := strconv.Atoi(userState.Data["giveId"])
@@ -133,7 +124,8 @@ func (ad *AdminPanel) InitTextHandlers() {
 						return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
 					}
 
-					if err = ad.giveService.UpdateGive(giveId, `"channel"=?`, channelStr); err != nil {
+					err = ad.giveService.UpdateGive(giveId, `"title"=?`, giveTitle)
+					if err != nil {
 						return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
 					}
 
@@ -146,39 +138,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(replyMessage, menu)
-			// Ввод заголовка конкурса
-			case data.ENTER_GIVE_TITLE_state:
-				giveTitle := ctx.Message().Text
-				giveId, err := strconv.Atoi(userState.Data["giveId"])
-				if err != nil {
-					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
+				if err := ctx.Reply(data.GIVE_TITLE_OK_message); err != nil {
+					return err
 				}
-
-				err = ad.giveService.UpdateGive(giveId, `"title"=?`, giveTitle)
-				if err != nil {
-					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
-				}
-
-				workStatus := userState.Data["workStatus"]
-				state := ""
-				replyMessage := ""
-				menu := &telebot.ReplyMarkup{}
-				if workStatus == data.WORK_STATUS_NEW {
-					state = data.ENTER_GIVE_DESCRIPTION_state
-					replyMessage = data.ENTER_GIVE_DESCRIPTION_message
-					menu = data.CANCEL_MENU
-				} else if workStatus == data.WORK_STATUS_EDIT {
-					state = data.SELECT_PROPERTY_TO_EDIT_state
-					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
-					menu = data.EDIT_GIVE_MENU
-				}
-
-				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
-					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
-				}
-
-				return ctx.Reply(replyMessage, menu)
+				return ctx.Send(replyMessage, menu)
 			// Ввод описания конкурса
 			case data.ENTER_GIVE_DESCRIPTION_state:
 				giveDesc := ctx.Message().Text
@@ -209,7 +172,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(replyMessage, menu)
+				if err := ctx.Reply(data.GIVE_DESCRIPTION_OK_message); err != nil {
+					return err
+				}
+				return ctx.Send(replyMessage, menu)
 			// Ввод дат старта - финиша конкурса
 			case data.ENTER_GIVE_START_FINISH_state:
 				duration := strings.Split(ctx.Message().Text, " - ")
@@ -260,7 +226,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(replyMessage, menu)
+				if err := ctx.Reply(data.GIVE_START_FINISH_OK_message); err != nil {
+					return err
+				}
+				return ctx.Send(replyMessage, menu)
 			// Ввод колличества победителей конкурса
 			case data.ENTER_WINNERS_COUNT_state:
 				winnersCount, err := strconv.Atoi(ctx.Message().Text)
@@ -282,6 +251,53 @@ func (ad *AdminPanel) InitTextHandlers() {
 				replyMessage := ""
 				menu := &telebot.ReplyMarkup{}
 				if workStatus == data.WORK_STATUS_NEW {
+					state = data.ENTER_TARGET_CHANNEL_state
+					replyMessage = data.ENTER_TARGET_CHANNEL_message
+					menu = data.CANCEL_MENU
+				} else if workStatus == data.WORK_STATUS_EDIT {
+					state = data.SELECT_PROPERTY_TO_EDIT_state
+					replyMessage = data.SELECT_PROPERTY_TO_EDIT_message
+					menu = data.EDIT_GIVE_MENU
+				}
+
+				if err := ad.fsmService.SetState(userId, state, userState.Data); err != nil {
+					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
+				}
+
+				if err := ctx.Reply(data.WINNERS_COUNT_OK_message); err != nil {
+					return err
+				}
+				return ctx.Send(replyMessage, menu)
+			// Ввод канала на котором будет проходить конкурс
+			case data.ENTER_TARGET_CHANNEL_state:
+				channelStr := ctx.Message().Text
+				channel, err := utils.StringToInt64(ctx.Message().Text)
+				if err != nil {
+					ad.logger.Errorf("cannot parse chatId=%d string to int64: %s", channel, err)
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_PARSE_CHANNEL_message, channel), data.CANCEL_MENU)
+				}
+
+				isAdmin, err := ad.checkBotIsAdmin(channel)
+				if err != nil {
+					return ctx.Reply(fmt.Sprintf(data.CANNOT_CHECK_BOT_IS_ADMIN_message, channel), data.CANCEL_MENU)
+				} else if !isAdmin {
+					return ctx.Reply(fmt.Sprintf(data.BOT_MUST_BE_ADMIN_message, channel), data.CANCEL_MENU)
+				}
+
+				giveId, err := strconv.Atoi(userState.Data["giveId"])
+				if err != nil {
+					return ctx.Reply(data.CANNOT_GET_STATE_DATA_message, data.CANCEL_MENU)
+				}
+
+				if err = ad.giveService.UpdateGive(giveId, `"channel"=?`, channelStr); err != nil {
+					return ctx.Reply(data.CANNOT_UPDATE_GIVE_message, data.CANCEL_MENU)
+				}
+
+				workStatus := userState.Data["workStatus"]
+				state := ""
+				replyMessage := ""
+				menu := &telebot.ReplyMarkup{}
+				if workStatus == data.WORK_STATUS_NEW {
 					state = data.ENTER_SUBSCRIPTION_CHANNELS_state
 					replyMessage = data.ENTER_SUBSCRIPTION_CHANNELS_message
 					menu = data.CANCEL_MENU
@@ -295,7 +311,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(replyMessage, menu)
+				if err := ctx.Reply(data.TARGET_CHANNEL_OK_message); err != nil {
+					return nil
+				}
+				return ctx.Send(replyMessage, menu)
 			// Ввод каналов для проверки подписки
 			case data.ENTER_SUBSCRIPTION_CHANNELS_state:
 				channels := strings.Split(ctx.Message().Text, " ")
@@ -357,11 +376,32 @@ func (ad *AdminPanel) InitTextHandlers() {
 						return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 					}
 
+					giveChannelId, err := utils.StringToInt64(give.Channel)
+					if err != nil {
+						return ctx.Reply(data.CANNOT_PARSE_CHANNEL_message, give.Channel, err)
+					}
+					giveChannelName := data.GetChatNameByChatID(ad.bot, giveChannelId, ad.logger)
+					if giveChannelName == "" {
+						return ctx.Reply(fmt.Sprintf(data.CANNOT_GET_CHAT_NAME_message, giveChannelId), data.CANCEL_MENU)
+					}
+					var targetChannelsNames []string
+					for _, targetChannel := range give.TargetChannels {
+						targetChannelId, err := utils.StringToInt64(targetChannel)
+						if err != nil {
+							return ctx.Reply(data.CANNOT_PARSE_CHANNEL_message, give.Channel, err)
+						}
+						targetChannelName := data.GetChatNameByChatID(ad.bot, targetChannelId, ad.logger)
+						if targetChannelName == "" {
+							return ctx.Reply(fmt.Sprintf(data.CANNOT_GET_CHAT_NAME_message, targetChannelId), data.CANCEL_MENU)
+						}
+						targetChannelsNames = append(targetChannelsNames, fmt.Sprintf("@%s", targetChannelName))
+					}
+
 					text := data.ClearTextForMarkdownV2(
 						fmt.Sprintf(
 							data.GIVE_OUTPUT_message,
-							give.Channel,
-							give.TargetChannels,
+							fmt.Sprintf("@%s", giveChannelName),
+							targetChannelsNames,
 							give.WinnersCount,
 							give.StartAt.In(ad.location).Format(time.RFC822),
 							give.FinishAt.In(ad.location).Format(time.RFC822),
@@ -394,7 +434,10 @@ func (ad *AdminPanel) InitTextHandlers() {
 					return ctx.Reply(data.CANNOT_SET_USER_state_message, data.CANCEL_MENU)
 				}
 
-				return ctx.Reply(replyMessage, menu)
+				if err := ctx.Reply(data.SUBSCRIPTION_CHANNELS_OK_message); err != nil {
+					return err
+				}
+				return ctx.Send(replyMessage, menu)
 			default:
 				return ctx.Reply(data.I_DONT_UNDERSTAND_message)
 			}
