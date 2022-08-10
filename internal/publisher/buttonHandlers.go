@@ -55,7 +55,7 @@ func (p *Publisher) InitButtonHandlers() {
 					return ctx.Respond(
 						&telebot.CallbackResponse{
 							Text:      data.MEMBER_ALREADY_EXIST_message,
-							ShowAlert: false,
+							ShowAlert: true,
 						},
 					)
 				}
@@ -70,7 +70,7 @@ func (p *Publisher) InitButtonHandlers() {
 			return ctx.Respond(
 				&telebot.CallbackResponse{
 					Text:      data.MEMBER_SAVE_SUCCESSFULLY_message,
-					ShowAlert: false,
+					ShowAlert: true,
 				},
 			)
 		},

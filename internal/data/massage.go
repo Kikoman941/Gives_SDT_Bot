@@ -6,7 +6,7 @@ const (
 	GIVE_CONTENT_message                = "*%s*\n\n%s"
 	CANNOT_GET_GIVE_message             = "Не могу получить данные конкурса. Обратитесь к разработчику"
 	CANNOT_PARSE_CHANNEL_message        = "Не могу распознать канал %d. Проверьте корректность ввода или обратитесь к разработчику"
-	CANNOT_GET_GIVE_WINNERS_message     = "Конкурс giveId=%d завершен, не могу получить победителей. Обратитесь к разработчику"
+	CANNOT_GET_GIVE_WINNERS_message     = "Конкурс giveId=%d должен быть завершен, не могу получить победителей. Обратитесь к разработчику"
 	CANNOT_UPDATE_FINISHED_GIVE_message = "Конкурс giveId=%d завершен, не могу обновить его. Обратитесь к разработчику"
 
 	// Сообщения и ошибки админки

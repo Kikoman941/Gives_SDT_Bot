@@ -62,6 +62,7 @@ func (p *Publisher) serveStartedGives() {
 	readyGives := p.giveService.GetStartedGives(p.location)
 	if len(readyGives) != 0 {
 		for _, g := range readyGives {
+			var msg interface{}
 			recipient := p.getChatByUserId(g.Owner)
 			if recipient == nil {
 				p.logger.Errorf("cannot get recipient for userId=%d", g.Owner)
@@ -74,20 +75,15 @@ func (p *Publisher) serveStartedGives() {
 				continue
 			}
 
-			msg := &telebot.Photo{
-				File: telebot.FromDisk(fmt.Sprintf("./.images/%s", g.Image)),
+			if g.Image == "" {
+				msg = data.CreateMessageFromGive("text", &g)
+			} else {
+				msg = data.CreateMessageFromGive("photo", &g)
 			}
-			msg.Caption = data.ClearTextForMarkdownV2(
-				fmt.Sprintf(
-					data.GIVE_CONTENT_message,
-					g.Title,
-					g.Description,
-				),
-			)
 
 			menu := data.CreateInlineMenu(
 				telebot.Btn{
-					Text: "Учавствовать",
+					Text: "Участвовать",
 					Data: strconv.Itoa(g.Id),
 				},
 			)

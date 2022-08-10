@@ -31,6 +31,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 			switch userState.State {
 			// Меню конкурса
 			case data.SELECT_OWN_GIVE_state:
+				var msg interface{}
 				selectedGiveId, err := strconv.Atoi(ctx.Callback().Data)
 				if err != nil {
 					return err
@@ -54,17 +55,11 @@ func (ad *AdminPanel) InitTextHandlers() {
 					isActive = "Активный"
 				}
 
-				msg := &telebot.Photo{
-					File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
+				if give.Image == "" {
+					msg = data.CreateMessageFromGive("text", &give)
+				} else {
+					msg = data.CreateMessageFromGive("photo", &give)
 				}
-
-				msg.Caption = data.ClearTextForMarkdownV2(
-					fmt.Sprintf(
-						data.GIVE_CONTENT_message,
-						give.Title,
-						give.Description,
-					),
-				)
 
 				text := data.ClearTextForMarkdownV2(
 					fmt.Sprintf(
@@ -347,6 +342,7 @@ func (ad *AdminPanel) InitTextHandlers() {
 				replyMessage := ""
 				menu := &telebot.ReplyMarkup{}
 				if workStatus == data.WORK_STATUS_NEW {
+					var msg interface{}
 					give, err := ad.giveService.GetGiveById(giveId)
 					if err != nil {
 						return ctx.Reply(data.CANNOT_GET_GIVE_message, data.CANCEL_MENU)
@@ -357,16 +353,11 @@ func (ad *AdminPanel) InitTextHandlers() {
 						isActive = "Активный"
 					}
 
-					msg := &telebot.Photo{
-						File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
+					if give.Image == "" {
+						msg = data.CreateMessageFromGive("text", &give)
+					} else {
+						msg = data.CreateMessageFromGive("photo", &give)
 					}
-					msg.Caption = data.ClearTextForMarkdownV2(
-						fmt.Sprintf(
-							data.GIVE_CONTENT_message,
-							give.Title,
-							give.Description,
-						),
-					)
 
 					d := map[string]string{
 						"giveId":     userState.Data["giveId"],

@@ -72,3 +72,33 @@ func GetChatNameByChatID(b *telebot.Bot, chatId int64, logger *logging.Logger) s
 	}
 	return chat.Title
 }
+
+func CreateMessageFromGive(t string, give *give.Give) interface{} {
+	var msg interface{}
+
+	switch t {
+	case "text":
+		msg = ClearTextForMarkdownV2(
+			fmt.Sprintf(
+				GIVE_CONTENT_message,
+				give.Title,
+				give.Description,
+			),
+		)
+	case "photo":
+		msg = &telebot.Photo{
+			File: telebot.FromDisk(fmt.Sprintf("./.images/%s", give.Image)),
+		}
+		if msg, ok := msg.(telebot.Photo); ok {
+			msg.Caption = ClearTextForMarkdownV2(
+				fmt.Sprintf(
+					GIVE_CONTENT_message,
+					give.Title,
+					give.Description,
+				),
+			)
+		}
+	}
+
+	return msg
+}
